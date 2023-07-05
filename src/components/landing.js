@@ -28,7 +28,7 @@ function LandingPage() {
         <>
           <h2>or</h2>
           <button className="createAccountButton" onClick={handleCreateAccount}>
-            CREATE ACCOUNT
+            CREATE ACCOUNT!
           </button>
           <h3>log in</h3>
         </>
