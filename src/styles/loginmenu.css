@@ -1,0 +1,27 @@
+.loginMenu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.loginMenu button {
+  background-color: #ffffff;
+  color: #3d3d3d;
+  font-weight: bold;
+  border: 1px solid #dcdcdc;
+  border-radius: 18px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  min-width: 200px;
+  height: fit-content;
+}
+
+.loginMenu button:hover {
+  background-color: #f2f2f2;
+}
