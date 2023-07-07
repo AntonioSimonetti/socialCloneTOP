@@ -6,12 +6,14 @@ function LoginMenu({ onBack }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isResetPassword, setIsResetPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    "Insert your email and password to login."
+  );
   const [successMessage, setSuccessMessage] = useState("");
 
   const handleResetPassword = async () => {
     if (!email) {
-      setError("Inserisci un'email valida.");
+      setError("Invalid email.");
       setSuccessMessage("");
       return;
     }
@@ -22,9 +24,9 @@ function LoginMenu({ onBack }) {
       setError("");
     } catch (error) {
       if (error.code === "auth/user-not-found") {
-        setError("L'email non è associata a un account.");
+        setError("The email is not associated with any account");
       } else {
-        setError("Errore nell'invio dell'email di reset password.");
+        setError("Error sending reset password email.");
       }
       setSuccessMessage("");
     }
@@ -41,9 +43,9 @@ function LoginMenu({ onBack }) {
         error.code === "auth/user-not-found" ||
         error.code === "auth/wrong-password"
       ) {
-        setError("Credenziali non valide.");
+        setError("Invalid credentials.");
       } else {
-        setError("Errore durante l'accesso.");
+        setError("Error during login.");
       }
     }
   };
@@ -58,6 +60,8 @@ function LoginMenu({ onBack }) {
 
   return (
     <div className="loginMenu">
+      {error && <p className="error">{error}</p>}
+      {successMessage && <p>{successMessage}</p>}
       {!isResetPassword ? (
         <>
           <input
@@ -88,8 +92,6 @@ function LoginMenu({ onBack }) {
           <button onClick={toggleResetPassword}>Back</button>
         </>
       )}
-      {error && <p className="error">{error}</p>}
-      {successMessage && <p>{successMessage}</p>}
     </div>
   );
 }

@@ -33,7 +33,7 @@ function RegistrationForm({ onBack }) {
 
     //verify email using email-validator
     if (!isEmailValid(email)) {
-      setError("Formato email non valido.");
+      setError("Invalid email.");
       return;
     }
 
