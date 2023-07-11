@@ -3,6 +3,7 @@ import { signUpWithEmail } from "../firebase";
 import countries from "countries-list";
 import { validate } from "email-validator";
 import "../styles/registrationform.css";
+import { createUserDocument } from "../firebaseUtils";
 
 function RegistrationForm({ onBack }) {
   const [username, setUsername] = useState("");
@@ -50,8 +51,16 @@ function RegistrationForm({ onBack }) {
     }
 
     try {
-      await signUpWithEmail(email, password);
-      // Registration successful
+      const { user } = await signUpWithEmail(email, password); // Ottenere l'oggetto user dalla chiamata a signUpWithEmail
+      // Registrazione avvenuta con successo, chiamata a createUserDocument
+      const userData = {
+        uid: user.uid, // Utilizza il valore dell'uid dell'utente
+        name: username,
+        email: email,
+        position: position,
+        age: age,
+      };
+      await createUserDocument(userData);
     } catch (error) {
       console.log(error);
       if (error.code === "auth/email-already-in-use") {

@@ -77,8 +77,8 @@ function LoginMenu({ onBack }) {
             onChange={(e) => setPassword(e.target.value)}
           />
           <button onClick={handleLogin}>Login</button>
-          <button onClick={toggleResetPassword}>Forgot Password?</button>
           <button onClick={onBack}>Back</button>
+          <h3 onClick={toggleResetPassword}>Forgot Password?</h3>
         </>
       ) : (
         <>

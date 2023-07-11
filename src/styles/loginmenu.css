@@ -25,3 +25,7 @@
 .loginMenu button:hover {
   background-color: #f2f2f2;
 }
+
+.loginMenu h3 {
+  cursor: pointer;
+}
