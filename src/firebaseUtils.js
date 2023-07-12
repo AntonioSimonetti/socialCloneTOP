@@ -1,24 +1,33 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
-import "firebase/auth";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  // createUserWithEmailAndPassword,
+  // signInWithEmailAndPassword,
+  // signOut,
+  // sendPasswordResetEmail,
+} from "firebase/auth";
 import "firebase/firestore";
 import { firebaseConfig } from "./firebase";
 
 // Inizializza Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-// Add a new user to the db
 const createUserDocument = async (user) => {
   const usersCollectionRef = doc(db, "users", user.uid);
 
-  const { name, email, position, age } = user;
+  const { name, email, position, age, photoURL } = user; // Destructuring della proprietà photoURL
 
   const userData = {
     name,
     email,
     position,
     age,
+    photoURL, // Utilizza la proprietà photoURL fornita nell'oggetto user
     gender: null,
     bio: null,
     avatar: null,
@@ -48,4 +57,33 @@ const fetchUserProfileData = async (userId) => {
   }
 };
 
-export { createUserDocument, fetchUserProfileData };
+// Funzione per l'accesso con Google
+const signInWithGoogle = () => {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+  return signInWithPopup(auth, provider);
+};
+
+const signInWithGoogleAndCreateUser = async () => {
+  try {
+    const result = await signInWithGoogle();
+    console.log(result);
+    const user = {
+      uid: result.user.uid,
+      name: result.user.displayName,
+      email: result.user.email,
+      position: null,
+      age: null,
+    };
+    await createUserDocument(user);
+    // Resto del codice da eseguire dopo aver salvato l'utente nel database
+  } catch (error) {
+    console.log("Errore durante l'accesso con Google:", error);
+  }
+};
+
+export {
+  createUserDocument,
+  fetchUserProfileData,
+  signInWithGoogleAndCreateUser,
+};

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import RegistrationForm from "./registrationform";
 import LoginMenu from "./loginmenu"; // Importa il componente LoginMenu
 import "../styles/landing.css";
-import { signInWithGoogle } from "../firebase";
+import { signInWithGoogleAndCreateUser } from "../firebaseUtils";
 
 function LandingPage() {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
@@ -31,7 +31,10 @@ function LandingPage() {
       )}
       {!showRegistrationForm && !showLoginMenu && (
         <div className="landingAccessButtonsDiv">
-          <button className="googleSignIn" onClick={signInWithGoogle}>
+          <button
+            className="googleSignIn"
+            onClick={signInWithGoogleAndCreateUser}
+          >
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
               alt="Google Logo"

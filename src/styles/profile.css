@@ -3,20 +3,24 @@
   align-items: center;
   justify-content: flex-start;
   flex-direction: column;
-  width: 100vw;
   height: 100vh;
+  width: 100vw;
+  overflow: hidden;
   background-color: purple;
-  border: 2px black solid;
+  box-sizing: border-box;
 }
 
 .header {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100vw;
+  width: 100%;
   height: 10vh;
   background-color: yellow;
   border: 2px black solid;
+  border-top: none;
+  border-left: none;
+  border-right: none;
 }
 
 .topDiv {
@@ -24,22 +28,76 @@
   justify-content: center;
   align-items: center;
   flex-direction: row;
-  border: 2px black solid;
-  background-color: red;
-  width: 100vw;
-  height: 5%;
+  width: 100%;
+  height: 5vh;
+  padding: 0;
 }
 
 .avatarDiv {
-  width: 100%;
+  width: 90%;
   height: 10vh;
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
+  padding: 0 10px;
 }
 
 .avatarDiv img {
-  /* Set the width of the SVG as 50% of the parent div */
-  height: 50%;
+  width: 5%;
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  transform: translate(-50%, -50%);
+  border-radius: 18px;
+  border: 2px black solid;
+}
+
+.identificationDiv {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 90%;
+  line-height: 0;
+  padding: 0.25rem;
+  box-sizing: border-box;
+}
+
+.infoDiv {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 90%;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  box-sizing: border-box;
+}
+
+.followerFollowingDiv {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 90%;
+  margin: 0;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .avatarDiv img {
+    width: 10%;
+  }
+}
+
+@media (max-width: 650px) {
+  .avatarDiv img {
+    width: 15%;
+  }
+}
+
+@media (max-width: 300px) {
+  .profile {
+    font-size: 10px;
+  }
 }

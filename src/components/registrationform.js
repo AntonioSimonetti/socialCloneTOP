@@ -54,7 +54,7 @@ function RegistrationForm({ onBack }) {
       const { user } = await signUpWithEmail(email, password); // Ottenere l'oggetto user dalla chiamata a signUpWithEmail
       // Registrazione avvenuta con successo, chiamata a createUserDocument
       const userData = {
-        uid: user.uid, // Utilizza il valore dell'uid dell'utente
+        uid: user.uid,
         name: username,
         email: email,
         position: position,

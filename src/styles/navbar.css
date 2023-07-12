@@ -3,7 +3,7 @@
   bottom: 0;
   left: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
   justify-items: center;
   align-items: center;
   border: 2px solid black;
@@ -15,7 +15,8 @@
   background-color: wheat;
 }
 
-.icon-container {
+.icon-container,
+.icon-container-center {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -26,4 +27,9 @@
 .icon-container img {
   width: 20%;
   height: 20%;
+}
+
+.icon-container-center img {
+  width: 30%;
+  height: 30%;
 }
