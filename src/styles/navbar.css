@@ -1,20 +1,18 @@
 .navbar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-  justify-items: center;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   border: 2px solid black;
-  width: 100%;
+  width: calc(90% - 40px);
   height: 10%;
-  border-bottom: none;
-  border-left: none;
-  border-right: none;
   background-color: wheat;
+  border-radius: 30px;
+  padding: 0 20px;
 }
-
 .icon-container,
 .icon-container-center {
   display: flex;
@@ -27,9 +25,16 @@
 .icon-container img {
   width: 20%;
   height: 20%;
+  transition: filter 0.3s ease;
 }
 
 .icon-container-center img {
   width: 30%;
   height: 30%;
+  transition: filter 0.3s ease;
+}
+
+.icon-container:hover img,
+.icon-container-center:hover img {
+  filter: brightness(3);
 }

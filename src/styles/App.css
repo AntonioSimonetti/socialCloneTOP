@@ -1,6 +1,8 @@
 body {
   padding: 0;
   margin: 0;
+
+  height: 100vh;
   background-color: aqua;
   box-sizing: border-box;
 }
@@ -10,4 +12,10 @@ html {
   margin: 0;
   background-color: red;
   box-sizing: border-box;
+}
+
+.App {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

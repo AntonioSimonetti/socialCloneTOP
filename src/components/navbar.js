@@ -20,7 +20,7 @@ https://www.svgrepo.com/svg/479452/magnifying-glass-for-search
 
 */
 
-function Navbar({ onSearchClick, onHomeClick }) {
+function Navbar({ onSearchClick, onHomeClick, onAddTweetClick }) {
   return (
     <div className="navbar">
       <div className="icon-container" onClick={onHomeClick}>
@@ -30,7 +30,7 @@ function Navbar({ onSearchClick, onHomeClick }) {
         <img src={searchsvg} alt="searchicon" />{" "}
       </div>
       <div className="icon-container-center">
-        <img src={createChatsvg} alt="icon" />
+        <img src={createChatsvg} alt="icon" onClick={onAddTweetClick} />
       </div>
       <div className="icon-container">
         <img src={notifyoffsvg} alt="notifyicon" />{" "}

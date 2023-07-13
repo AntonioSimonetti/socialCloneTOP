@@ -1,5 +1,11 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -17,17 +23,18 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// funzione per creare l'user
 const createUserDocument = async (user) => {
   const usersCollectionRef = doc(db, "users", user.uid);
 
-  const { name, email, position, age, photoURL } = user; // Destructuring della proprietà photoURL
+  const { name, email, position, age, photoURL } = user;
 
   const userData = {
     name,
     email,
     position,
     age,
-    photoURL, // Utilizza la proprietà photoURL fornita nell'oggetto user
+    photoURL,
     gender: null,
     bio: null,
     avatar: null,
@@ -36,11 +43,6 @@ const createUserDocument = async (user) => {
     followers: 0,
   };
   await setDoc(usersCollectionRef, userData);
-
-  // Log, to be removed
-  const createdUserSnapshot = await getDoc(usersCollectionRef);
-  const createdUserData = createdUserSnapshot.data();
-  console.log("New user created:", createdUserData);
 
   // not sure yet i will keep this
   return user.uid;
@@ -76,9 +78,49 @@ const signInWithGoogleAndCreateUser = async () => {
       age: null,
     };
     await createUserDocument(user);
-    // Resto del codice da eseguire dopo aver salvato l'utente nel database
+    // Resto del codice da eseguire dopo aver salvato l'utente nel databas
   } catch (error) {
     console.log("Errore durante l'accesso con Google:", error);
+  }
+};
+
+//create tweet
+const addTweet = async (tweetContent) => {
+  const auth = getAuth();
+  const userId = auth.currentUser.uid;
+
+  const db = getFirestore();
+  const userTweetsDocRef = doc(db, "usertweets", userId);
+
+  const tweetData = {
+    content: tweetContent,
+    timestamp: new Date().getTime(),
+    likes: 0,
+    rt: 0,
+    comments: null,
+  };
+
+  try {
+    const userTweetsDocSnapshot = await getDoc(userTweetsDocRef);
+
+    if (userTweetsDocSnapshot.exists()) {
+      await updateDoc(userTweetsDocRef, {
+        tweets: [...userTweetsDocSnapshot.data().tweets, tweetData],
+      });
+      console.log("Tweet added to existing document.");
+    } else {
+      await setDoc(userTweetsDocRef, { tweets: [tweetData] });
+      console.log("New document created with the tweet.");
+    }
+
+    // Log, to be removed
+    const createdUserSnapshot = await getDoc(userTweetsDocRef);
+    const createdUserData = createdUserSnapshot.data();
+    console.log("New user created:", createdUserData);
+
+    console.log("Tweet added successfully.");
+  } catch (error) {
+    console.error("Error adding tweet: ", error);
   }
 };
 
@@ -86,4 +128,5 @@ export {
   createUserDocument,
   fetchUserProfileData,
   signInWithGoogleAndCreateUser,
+  addTweet,
 };
