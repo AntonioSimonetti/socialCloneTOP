@@ -12,7 +12,7 @@ function Homepage() {
 
   return (
     <div className="homepage">
-      <p>Homepage Test</p>
+      <p>Homepage Test!!!</p>
       <button onClick={handleLogout}>Logout</button>
     </div>
   );
