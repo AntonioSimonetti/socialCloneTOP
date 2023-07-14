@@ -50,6 +50,14 @@
   overflow: hidden;
 }
 
+.avatar img {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 7rem;
+  height: 6rem;
+}
+
 .buttons {
   display: flex;
   width: 100%;

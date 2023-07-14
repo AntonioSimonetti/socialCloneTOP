@@ -98,20 +98,114 @@
   box-sizing: border-box;
 }
 
+.tweetsDiv {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: column;
+  border: 2px solid black;
+  width: 95%;
+  gap: 0.25rem;
+  background-color: wheat;
+  flex-wrap: wrap;
+  min-height: 0;
+}
+
+.tweet {
+  border: 2px solid green;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 0 10px;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  flex-basis: 0;
+  flex-grow: 1;
+}
+
+.topTweetDiv {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  gap: 0.5rem;
+}
+
+.contentDiv {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+}
+
+.reactionsDiv {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 20%;
+}
+
+.reactionsDiv img {
+  width: 5%;
+  height: 5%;
+}
+
+.likesDiv,
+.commentsDiv,
+.rtDiv {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 @media (max-width: 900px) {
   .avatarDiv img {
     width: 10%;
   }
-}
 
-@media (max-width: 650px) {
-  .avatarDiv img {
-    width: 15%;
+  .reactionsDiv img {
+    width: 8%;
+    height: 8%;
   }
 }
 
-@media (max-width: 300px) {
+@media (max-width: 650px) {
+  .tweet {
+    font-size: 0.8rem;
+  }
+
+  .avatarDiv img {
+    width: 15%;
+  }
+
+  .reactionsDiv img {
+    width: 15%;
+    height: 15%;
+  }
+}
+@media (max-width: 390px) {
+  .tweetsDiv {
+    margin-bottom: 5rem;
+  }
+
+  .tweet {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 320px) {
   .profile {
-    font-size: 10px;
+    font-size: 3px;
+  }
+
+  .tweet {
+    font-size: 0.5rem;
   }
 }

@@ -5,6 +5,7 @@ import {
   setDoc,
   getDoc,
   updateDoc,
+  collection,
 } from "firebase/firestore";
 import {
   getAuth,
@@ -91,13 +92,16 @@ const addTweet = async (tweetContent) => {
 
   const db = getFirestore();
   const userTweetsDocRef = doc(db, "usertweets", userId);
+  const tweetKey = doc(collection(db, "usertweets", userId, "tweets")).id; // Genera una chiave unica
+  const timestamp = new Date().getTime();
 
   const tweetData = {
+    key: tweetKey,
     content: tweetContent,
-    timestamp: new Date().getTime(),
+    timestamp: new Date(timestamp).toLocaleString(),
     likes: 0,
     rt: 0,
-    comments: null,
+    comments: 0,
   };
 
   try {
@@ -124,9 +128,55 @@ const addTweet = async (tweetContent) => {
   }
 };
 
+/*const fetchUserTweets = async () => {
+  const auth = getAuth();
+  const userId = auth.currentUser.uid;
+
+  const db = getFirestore();
+  const userTweetsDocRef = doc(db, "usertweets", userId);
+
+  try {
+    const userTweetsDocSnapshot = await getDoc(userTweetsDocRef);
+
+    if (userTweetsDocSnapshot.exists()) {
+      const userTweetsData = userTweetsDocSnapshot.data();
+      return userTweetsData.tweets;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching user tweets: ", error);
+    return [];
+  }
+}; */
+
+const fetchUserTweets = async (limit) => {
+  const auth = getAuth();
+  const userId = auth.currentUser.uid;
+
+  const db = getFirestore();
+  const userTweetsDocRef = doc(db, "usertweets", userId);
+
+  try {
+    const userTweetsDocSnapshot = await getDoc(userTweetsDocRef);
+
+    if (userTweetsDocSnapshot.exists()) {
+      const userTweetsData = userTweetsDocSnapshot.data();
+      const tweets = userTweetsData.tweets.slice(-limit);
+      return tweets;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching user tweets: ", error);
+    return [];
+  }
+};
+
 export {
   createUserDocument,
   fetchUserProfileData,
   signInWithGoogleAndCreateUser,
   addTweet,
+  fetchUserTweets,
 };
