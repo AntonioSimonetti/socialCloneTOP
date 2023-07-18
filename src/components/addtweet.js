@@ -7,6 +7,8 @@ import "../styles/addtweet.css";
 function Addtweet() {
   const [user, setUser] = useState(null);
   const [tweetContent, setTweetContent] = useState("");
+  const [characterCount, setCharacterCount] = useState(0);
+  const MAX_CHARACTER_LIMIT = 155;
 
   useEffect(() => {
     const auth = getAuth();
@@ -22,13 +24,17 @@ function Addtweet() {
   }, []);
 
   const handleTweetContentChange = (e) => {
-    setTweetContent(e.target.value);
+    const content = e.target.value;
+    setTweetContent(content);
+    setCharacterCount(content.length);
   };
 
   const handlePublishClick = () => {
-    if (tweetContent.trim() !== "") {
+    if (tweetContent.trim() !== "" && characterCount <= MAX_CHARACTER_LIMIT) {
       addTweet(tweetContent);
       setTweetContent("");
+    } else {
+      return;
     }
   };
 
@@ -43,7 +49,15 @@ function Addtweet() {
           placeholder="Scrivi il tuo tweet"
           value={tweetContent}
           onChange={handleTweetContentChange}
+          className={characterCount > MAX_CHARACTER_LIMIT ? "error" : ""}
         />
+        <span
+          className={`character-count ${
+            characterCount > MAX_CHARACTER_LIMIT ? "exceeded" : ""
+          }`}
+        >
+          {characterCount}/{MAX_CHARACTER_LIMIT}
+        </span>
       </div>
       <div className="buttons">
         <button className="add-media-button">Add photo/video</button>

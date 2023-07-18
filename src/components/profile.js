@@ -4,9 +4,11 @@ import defaultusersvg from "../img/user-circle-svgrepo-com (1).svg";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { fetchUserProfileData, fetchUserTweets } from "../firebaseUtils";
 import "../styles/profile.css";
-import heartsvg from "../img/heart-svgrepo-com.svg";
-import commentsvg from "../img/chat-round-svgrepo-com.svg";
-import rtsvg from "../img/refresh-svgrepo-com.svg";
+import Profiletweets from "./profiletweets";
+
+import postionsvg from "../img/map-point-wave.svg";
+import agesvg from "../img/calendar.svg";
+import gendersvg from "../img/gender.svg";
 
 /*
 https://www.svgrepo.com/collection/solar-bold-icons/19
@@ -57,24 +59,18 @@ function Profile() {
             Placeholder for bio, to decide maximum characters
           </p>
           <div className="infoDiv">
-            {user.position && (
-              <div className="positionDiv">
-                <img alt="position icon" />
-                <p>{user.position}</p>
-              </div>
-            )}
-            {user.age && (
-              <div className="ageDiv">
-                <img alt="age icon" />
-                <p>{user.age}</p>
-              </div>
-            )}
-            {user.gender && (
-              <div className="genderDiv">
-                <img alt="gender icon" />
-                <p>{user.gender}</p>
-              </div>
-            )}
+            <div className="positionDiv">
+              <img src={postionsvg} alt="position icon" />
+              <p>{user.position}</p>
+            </div>
+            <div className="ageDiv">
+              <img src={agesvg} alt="age icon" />
+              <p>{user.age}</p>
+            </div>
+            <div className="genderDiv">
+              <img src={gendersvg} alt="gender icon" />
+              <p>{user.gender}</p>
+            </div>
           </div>
           <div className="followerFollowingDiv">
             <h3>Following:</h3>
@@ -82,36 +78,7 @@ function Profile() {
             <h3>Followers:</h3>
             <p>{user.followers}</p>
           </div>
-          <div className="tweetsDiv">
-            {tweets.map((tweet) => (
-              <div key={tweet.key} className="tweet">
-                <div className="topTweetDiv">
-                  <h3>{user.name}</h3>
-                  <p>idplaceholder</p>
-                  <p>-</p>
-                  <p>{tweet.timestamp}</p>
-                </div>
-                <div className="contentDiv">
-                  <p>{tweet.content}</p>
-                </div>
-
-                <div className="reactionsDiv">
-                  <div className="likesDiv">
-                    <img src={heartsvg} alt="likeicon" />
-                    <p>{tweet.likes}</p>
-                  </div>
-                  <div className="rtDiv">
-                    <img src={rtsvg} alt="rticon" />
-                    <p>{tweet.rt}</p>
-                  </div>
-                  <div className="commentsDiv">
-                    <img src={commentsvg} alt="commenticon" />
-                    <p>{tweet.comments}</p>
-                  </div>
-                </div>
-              </div>
-            ))}{" "}
-          </div>
+          <Profiletweets user={user} />
         </>
       )}
     </div>

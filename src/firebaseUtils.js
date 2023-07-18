@@ -6,7 +6,9 @@ import {
   getDoc,
   updateDoc,
   collection,
+  //getDocs,
 } from "firebase/firestore";
+
 import {
   getAuth,
   GoogleAuthProvider,
@@ -128,28 +130,6 @@ const addTweet = async (tweetContent) => {
   }
 };
 
-/*const fetchUserTweets = async () => {
-  const auth = getAuth();
-  const userId = auth.currentUser.uid;
-
-  const db = getFirestore();
-  const userTweetsDocRef = doc(db, "usertweets", userId);
-
-  try {
-    const userTweetsDocSnapshot = await getDoc(userTweetsDocRef);
-
-    if (userTweetsDocSnapshot.exists()) {
-      const userTweetsData = userTweetsDocSnapshot.data();
-      return userTweetsData.tweets;
-    } else {
-      return [];
-    }
-  } catch (error) {
-    console.error("Error fetching user tweets: ", error);
-    return [];
-  }
-}; */
-
 const fetchUserTweets = async (limit) => {
   const auth = getAuth();
   const userId = auth.currentUser.uid;
@@ -160,9 +140,20 @@ const fetchUserTweets = async (limit) => {
   try {
     const userTweetsDocSnapshot = await getDoc(userTweetsDocRef);
 
+    console.log("userTweetsDocSnapshot:", userTweetsDocSnapshot);
+
     if (userTweetsDocSnapshot.exists()) {
       const userTweetsData = userTweetsDocSnapshot.data();
-      const tweets = userTweetsData.tweets.slice(-limit);
+
+      console.log("userTweetsData:", userTweetsData);
+
+      const tweets = userTweetsData.tweets.slice(-limit).map((tweetObj) => ({
+        content: tweetObj.content,
+        timestamp: tweetObj.timestamp,
+      }));
+
+      console.log("tweets:", tweets);
+
       return tweets;
     } else {
       return [];

@@ -82,6 +82,34 @@
   background-color: #0c87c0;
 }
 
+.error {
+  border: 2px solid red;
+}
+
+.character-count {
+  color: green;
+}
+
+.exceeded {
+  color: red;
+  animation: shake 0.2s linear;
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 @media (max-width: 300px) {
   .add-tweet {
     margin-top: 1rem;
