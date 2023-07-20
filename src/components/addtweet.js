@@ -23,10 +23,15 @@ function Addtweet() {
     return () => unsubscribe();
   }, []);
 
+  // Update character count asynchronously to ensure accurate state update
   const handleTweetContentChange = (e) => {
     const content = e.target.value;
     setTweetContent(content);
-    setCharacterCount(content.length);
+
+    // Use setTimeout to update character count asynchronously
+    setTimeout(() => {
+      setCharacterCount(content.length);
+    }, 0);
   };
 
   const handlePublishClick = () => {

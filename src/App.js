@@ -6,6 +6,7 @@ import LandingPage from "./components/landing";
 import Navbar from "./components/navbar";
 import Profile from "./components/profile";
 import Addtweet from "./components/addtweet";
+import UserSearch from "./components/usersearch";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -20,7 +21,7 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  const handleSearchClick = () => {
+  const handleProfileClick = () => {
     setCurrentComponent("profile");
   };
 
@@ -32,6 +33,10 @@ function App() {
     setCurrentComponent("addtweet");
   };
 
+  const handleSearchClick = () => {
+    setCurrentComponent("search");
+  };
+
   return (
     <div className="App">
       {user ? (
@@ -39,10 +44,13 @@ function App() {
           {currentComponent === "homepage" && <Homepage />}
           {currentComponent === "profile" && <Profile />}
           {currentComponent === "addtweet" && <Addtweet />}
+          {currentComponent === "search" && <UserSearch />}
+
           <Navbar
-            onSearchClick={handleSearchClick}
+            onProfileClick={handleProfileClick}
             onHomeClick={handleHomeClick}
             onAddTweetClick={handleAddTweetClick}
+            onSearchClick={handleSearchClick}
           />
         </>
       ) : (
