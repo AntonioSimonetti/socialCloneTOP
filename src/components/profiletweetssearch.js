@@ -4,7 +4,7 @@ import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
 
-const ProfileTweetsSearch = ({ documentId }) => {
+const ProfileTweetsSearch = ({ documentId, user }) => {
   const [tweets, setTweets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [startIndex, setStartIndex] = useState(0);
@@ -32,7 +32,7 @@ const ProfileTweetsSearch = ({ documentId }) => {
     }
   };
 
-  const displayedTweets = tweets.slice(startIndex, endIndex).reverse();
+  const displayedTweets = tweets.slice(startIndex, endIndex);
 
   return (
     <div className="componentButtonDiv">
@@ -43,7 +43,7 @@ const ProfileTweetsSearch = ({ documentId }) => {
           {displayedTweets.map((tweet) => (
             <div key={tweet.key} className="tweet">
               <div className="topTweetDiv">
-                <h3>{tweet.name}</h3>
+                <h3>{user.name}</h3>
                 <p>idplaceholder</p>
                 <p>-</p>
                 <p>{tweet.timestamp}</p>

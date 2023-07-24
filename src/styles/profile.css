@@ -238,6 +238,10 @@
     width: 85%;
     height: 80%;
   }
+
+  .infoDiv {
+    gap: 3rem;
+  }
 }
 
 @media (max-width: 650px) {

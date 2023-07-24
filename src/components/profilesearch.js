@@ -3,7 +3,6 @@ import defaultusersvg from "../img/user-circle-svgrepo-com (1).svg";
 import { fetchUserTweets, followUser } from "../firebaseUtils";
 import "../styles/profile.css";
 import ProfileTweetsSearch from "./profiletweetssearch";
-
 import postionsvg from "../img/map-point-wave.svg";
 import agesvg from "../img/calendar.svg";
 import gendersvg from "../img/gender.svg";
@@ -61,7 +60,7 @@ function ProfileSearch({ documentId, user }) {
             <h3>Followers:</h3>
             <p>{user.followers}</p>
           </div>
-          <ProfileTweetsSearch documentId={documentId} />
+          <ProfileTweetsSearch documentId={documentId} user={user} />
         </>
       )}
     </div>
@@ -69,10 +68,3 @@ function ProfileSearch({ documentId, user }) {
 }
 
 export default ProfileSearch;
-
-//Nome utente non renderizzato nel profilesearch
-//Responsive div info div, probabilmente basta un media query sugli schermi grandi e cambiare il resto
-//Valutare regole diverse con nuova collection per il following data. Regola firebase accedono tutti
-//a collection nuova dove tutti hanno associato al loro id chi li segue cosi che a funzione può accedere a questa collection
-//senza regole speciali su firebase e avendo comunque un livello di sicurezza
-//
