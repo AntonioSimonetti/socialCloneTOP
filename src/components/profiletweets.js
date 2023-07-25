@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchUserTweets } from "../firebaseUtils";
+import { fetchUserTweets, toggleLike } from "../firebaseUtils";
 import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
@@ -38,6 +38,21 @@ const Profiletweets = (props) => {
 
   const displayedTweets = tweets.slice(startIndex, endIndex); // Inverte l'ordine dei tweet da mostrare
 
+  const handleToggleLike = async (tweetId, authorId) => {
+    try {
+      await toggleLike(tweetId, authorId);
+      const updatedTweets = await fetchUserTweets();
+
+      // Aggiorna lo stato con i nuovi tweet
+      setTweets(updatedTweets.reverse());
+    } catch (error) {
+      console.error(
+        "Errore durante l'aggiornamento del like del tweet:",
+        error
+      );
+    }
+  };
+
   return (
     <div className="componentButtonDiv">
       {loading ? (
@@ -50,6 +65,7 @@ const Profiletweets = (props) => {
                 <h3>{user.name}</h3>
                 <p>idplaceholder</p>
                 <p>-</p>
+                <p>{tweet.date}</p>
                 <p>{tweet.timestamp}</p>
               </div>
 
@@ -58,7 +74,10 @@ const Profiletweets = (props) => {
               </div>
 
               <div className="reactionsDiv">
-                <div className="likesDiv">
+                <div
+                  className="likesDiv"
+                  onClick={() => handleToggleLike(tweet.key, tweet.userId)}
+                >
                   <img src={heartsvg} alt="likeicon" />
                   <p>{tweet.likes}</p>
                 </div>

@@ -9,8 +9,6 @@ import {
   getDocs,
   query,
   where,
-  arrayUnion,
-  arrayRemove,
 } from "firebase/firestore";
 
 import {
@@ -76,7 +74,6 @@ const signInWithGoogle = () => {
 const signInWithGoogleAndCreateUser = async () => {
   try {
     const result = await signInWithGoogle();
-    console.log(result);
     const user = {
       uid: result.user.uid,
       name: result.user.displayName,
@@ -99,15 +96,33 @@ const addTweet = async (tweetContent) => {
   const db = getFirestore();
   const userTweetsDocRef = doc(db, "usertweets", userId);
   const tweetKey = doc(collection(db, "usertweets", userId, "tweets")).id; // Genera una chiave unica
-  const timestamp = new Date().getTime();
+  const currentTime = new Date();
+  const date = currentTime.toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const time = currentTime.toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const userDocRef = doc(db, "users", userId);
+  const userDocSnapshot = await getDoc(userDocRef);
+  const userName = userDocSnapshot.data().name;
 
   const tweetData = {
     key: tweetKey,
     content: tweetContent,
-    timestamp: new Date(timestamp).toLocaleString(),
+    date: date,
+    timestamp: time,
     likes: 0,
     rt: 0,
     comments: 0,
+    name: userName,
+    likedBy: [],
+    userId: userId,
   };
 
   try {
@@ -150,6 +165,7 @@ const fetchUserTweets = async (limit) => {
       const tweets = userTweetsData.tweets.slice(-limit).map((tweetObj) => ({
         content: tweetObj.content,
         timestamp: tweetObj.timestamp,
+        date: tweetObj.date,
       }));
 
       return tweets;
@@ -320,15 +336,192 @@ const fetchFollowingUsersTweets = async () => {
       tweetsArray.push(...userTweetsData.tweets);
     });
 
-    // Ordiniamo i tweet per timestamp in ordine decrescente (dal più recente al meno recente)
-    tweetsArray.sort((a, b) => b.timestamp - a.timestamp);
+    console.log("not sorted in fu", tweetsArray);
 
-    console.log(tweetsArray);
+    // Ordiniamo i tweet per data e, in caso di stessa data, per timestamp (in ordine decrescente)
+    tweetsArray.sort((a, b) => {
+      if (a.date === b.date) {
+        return b.timestamp.localeCompare(a.timestamp);
+      } else {
+        return b.date.localeCompare(a.date);
+      }
+    });
 
+    console.log("sorted in firebase utilty", tweetsArray);
     return tweetsArray;
   } catch (error) {
     console.error("Error fetching following users' tweets:", error);
     return [];
+  }
+};
+
+/*
+const fetchFollowingUsersTweets = async () => {
+  const auth = getAuth();
+  const loggedInUserId = auth.currentUser.uid;
+
+  const db = getFirestore();
+  const loggedInUserRef = doc(db, "users", loggedInUserId);
+  const loggedInUserSnapshot = await getDoc(loggedInUserRef);
+
+  if (!loggedInUserSnapshot.exists()) {
+    console.error("User not found.");
+    return [];
+  }
+
+  const loggedInUserData = loggedInUserSnapshot.data();
+
+  if (
+    !loggedInUserData.whoFollowing ||
+    loggedInUserData.whoFollowing.length === 0
+  ) {
+    console.log("User is not following anyone.");
+    return [];
+  }
+
+  try {
+    const followingUsersIds = loggedInUserData.whoFollowing.map(
+      (user) => user.id
+    );
+
+    // Query per ottenere i tweet degli utenti seguiti
+    const querySnapshot = await getDocs(
+      query(
+        collection(db, "usertweets"),
+        where("__name__", "in", followingUsersIds)
+      )
+    );
+
+    const tweetsArray = [];
+
+    querySnapshot.forEach((doc) => {
+      const userTweetsData = doc.data();
+      tweetsArray.push(...userTweetsData.tweets);
+    });
+
+    console.log("not sorted in fu", tweetsArray);
+
+    // Ordiniamo i tweet per timestamp in ordine decrescente (dal più recente al meno recente)
+    tweetsArray.sort((a, b) => b.timestamp - a.timestamp);
+    console.log("sortedin fu", tweetsArray);
+    return tweetsArray;
+  } catch (error) {
+    console.error("Error fetching following users' tweets:", error);
+    return [];
+  }
+}; */
+
+const exploreTweets = async () => {
+  try {
+    const db = getFirestore();
+    const auth = getAuth();
+    const userId = auth.currentUser.uid;
+
+    // Step 1: Fetch all tweets from "usertweets" collection
+    const q = query(collection(db, "usertweets"));
+    const querySnapshot = await getDocs(q);
+
+    const tweets = [];
+    querySnapshot.forEach((doc) => {
+      const userData = doc.data();
+      if (userData.userId !== userId && Array.isArray(userData.tweets)) {
+        tweets.push(...userData.tweets);
+      }
+    });
+
+    // Log all tweets fetched from "usertweets" collection
+    console.log("All tweets from usertweets:", tweets);
+
+    // Step 2: Select random tweets from the fetched tweets
+    const randomTweets = [];
+    const totalTweets = tweets.length;
+    const numberOfTweetsToShow = totalTweets;
+    const indexes = new Set();
+
+    while (indexes.size < numberOfTweetsToShow) {
+      const randomIndex = Math.floor(Math.random() * totalTweets);
+      if (!indexes.has(randomIndex)) {
+        indexes.add(randomIndex);
+        randomTweets.push(tweets[randomIndex]);
+      }
+    }
+
+    // Log the random tweets selected
+    console.log("Random tweets:", randomTweets);
+
+    return randomTweets;
+  } catch (error) {
+    console.error("Error fetching random tweets:", error);
+  }
+};
+
+const toggleLike = async (tweetId, userId) => {
+  // Ottieni il riferimento al documento del tweet corrispondente
+  const db = getFirestore();
+  const userDocRef = doc(db, "usertweets", userId);
+  const loggedUser = auth.currentUser.uid;
+
+  // Ottieni il documento del tweet
+  const tweetDoc = await getDoc(userDocRef);
+
+  if (!tweetDoc.exists()) {
+    console.log("Tweet non trovato!");
+    return;
+  }
+
+  // Ottieni i dati del tweet dal documento
+  const userData = tweetDoc.data();
+
+  const tweetData = userData.tweets;
+
+  const tweetIndex = tweetData.findIndex((tweet) => tweet.key === tweetId);
+
+  if (tweetIndex === -1) {
+    console.log("Tweet non trovato!");
+    return;
+  }
+
+  const tweet = tweetData[tweetIndex];
+  const isLiked = tweet.likedBy.includes(loggedUser);
+
+  // Aggiungi o rimuovi l'userId dall'array likedby
+  if (isLiked) {
+    const updatedLikedBy = tweet.likedBy.filter((id) => id !== loggedUser);
+    const tweetsBefore = tweetData.slice(0, tweetIndex);
+    const tweetsAfter = tweetData.slice(tweetIndex + 1);
+    const updatedLikes = tweet.likes - 1;
+
+    // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato e gli oggetti tweet successivi
+    const updatedTweets = [
+      ...tweetsBefore,
+      { ...tweet, likedBy: updatedLikedBy, likes: updatedLikes },
+      ...tweetsAfter,
+    ];
+
+    // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
+    await updateDoc(userDocRef, { tweets: updatedTweets });
+  } else {
+    const updatedLikedBy = [...tweet.likedBy, loggedUser];
+    console.log(updatedLikedBy);
+
+    // Creare una copia degli oggetti tweet precedenti l'oggetto specifico
+    const tweetsBefore = tweetData.slice(0, tweetIndex);
+
+    // Creare una copia degli oggetti tweet che si trovano dopo l'oggetto specifico
+    const tweetsAfter = tweetData.slice(tweetIndex + 1);
+
+    // Aggiornare il parametro likes nell'oggetto tweet corrispondente
+    const updatedLikes = tweet.likes + 1;
+
+    // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato con il valore likes aggiornato e gli oggetti tweet successivi
+    const updatedTweets = [
+      ...tweetsBefore,
+      { ...tweet, likedBy: updatedLikedBy, likes: updatedLikes },
+      ...tweetsAfter,
+    ];
+
+    // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
+    await updateDoc(userDocRef, { tweets: updatedTweets });
   }
 };
 
@@ -342,4 +535,7 @@ export {
   fetchUserTweetsIn,
   followUser,
   fetchFollowingUsersTweets,
+  exploreTweets,
+  toggleLike,
+  auth,
 };

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { signOutUser } from "../firebase";
-import { fetchFollowingUsersTweets } from "../firebaseUtils";
+import {
+  fetchFollowingUsersTweets,
+  exploreTweets,
+  toggleLike,
+  auth,
+} from "../firebaseUtils";
 import "../styles/home.css";
 import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
@@ -13,6 +18,25 @@ function Homepage() {
   const [endIndex, setEndIndex] = useState(5);
   const [displayedTweets, setDisplayedTweets] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [showExplore, setShowExplore] = useState(false);
+
+  const handleToggleLike = async (tweetId, authorId) => {
+    try {
+      await toggleLike(tweetId, authorId);
+      fetchTweets();
+    } catch (error) {
+      console.error(
+        "Errore durante l'aggiornamento del like del tweet:",
+        error
+      );
+    }
+  };
+
+  const handleToggleExplore = () => {
+    setShowExplore((prevShowExplore) => !prevShowExplore);
+    setStartIndex(0);
+    setEndIndex(5);
+  };
 
   const handleLogout = async () => {
     try {
@@ -22,22 +46,24 @@ function Homepage() {
     }
   };
 
+  const fetchTweets = async () => {
+    let tweetsData;
+    if (showExplore) {
+      tweetsData = await exploreTweets();
+    } else {
+      tweetsData = await fetchFollowingUsersTweets();
+    }
+
+    setTweets(tweetsData); // Invertemo l'array per ottenere i tweet più recenti per primi
+    setDataLoaded(tweetsData.length > 0);
+  };
+
   useEffect(() => {
-    const fetchTweets = async () => {
-      const tweetsData = await fetchFollowingUsersTweets();
-
-      // Uniamo tutti i tweet in un unico array e ordiniamoli in base al timestamp
-      const allTweets = tweetsData.reduce(
-        (acc, userTweets) => acc.concat(userTweets),
-        []
-      );
-      allTweets.sort((a, b) => a.timestamp - b.timestamp); // Ordiniamo in ordine crescente per ottenere i tweet più recenti per primi
-
-      setTweets(allTweets.reverse());
-      setDataLoaded(allTweets.length > 0);
-    };
-
     fetchTweets();
+  }, [showExplore]);
+
+  useEffect(() => {
+    console.log(auth.currentUser.uid);
   }, []);
 
   const handleLoadMore = () => {
@@ -56,14 +82,47 @@ function Homepage() {
 
   useEffect(() => {
     const displayedTweetsSlice = tweets.slice(startIndex, endIndex);
+    console.log("tweets", tweets);
     setDisplayedTweets(displayedTweetsSlice);
   }, [tweets, startIndex, endIndex]);
+
+  useEffect(() => {
+    // Function to divide tweets into arrays based on date
+    const divideTweetsByDate = (tweets) => {
+      const tweetsByDate = {};
+      tweets.forEach((tweet) => {
+        const timestamp = new Date(tweet.timestamp);
+        if (isNaN(timestamp)) {
+          // Invalid date, skip this tweet
+          return;
+        }
+        const dateKey = timestamp.toDateString();
+        if (!tweetsByDate[dateKey]) {
+          tweetsByDate[dateKey] = [];
+        }
+        tweetsByDate[dateKey].push(tweet);
+      });
+      return tweetsByDate;
+    };
+
+    // Divide tweets into arrays based on date
+    const tweetsByDate = divideTweetsByDate(tweets);
+
+    // Log each of the new arrays
+    for (const dateKey in tweetsByDate) {
+      console.log(`Tweets for date ${dateKey}:`, tweetsByDate[dateKey]);
+    }
+  }, [tweets]);
 
   return (
     <div className="homepage">
       <div className="headerDiv">
         <p>Homepage Test</p>
         <button onClick={handleLogout}>Logout</button>
+        <button onClick={handleToggleExplore}>
+          {" "}
+          {showExplore ? "Following" : "Explore"}
+        </button>
       </div>
       <div className="componentButtonDiv">
         {loading ? (
@@ -76,6 +135,7 @@ function Homepage() {
                   <h3>{tweet.name}</h3>
                   <p>idplaceholder</p>
                   <p>-</p>
+                  <p>{tweet.date}</p>
                   <p>{tweet.timestamp}</p>
                 </div>
 
@@ -84,7 +144,10 @@ function Homepage() {
                 </div>
 
                 <div className="reactionsDiv">
-                  <div className="likesDiv">
+                  <div
+                    className="likesDiv"
+                    onClick={() => handleToggleLike(tweet.key, tweet.userId)}
+                  >
                     <img src={heartsvg} alt="likeicon" />
                     <p>{tweet.likes}</p>
                   </div>
@@ -115,5 +178,5 @@ function Homepage() {
 
 export default Homepage;
 
-//render buttonsDiv da controllare
-//aggiungere keyvalue per il nome anche a usertweets collection
+//gestione like nel component profiletweets vedi perchè quando sono 0 non si vedono proprio nel profilo
+//evitare che explore venga triggherato quando metto like e fetch nuovi randomici tweet
