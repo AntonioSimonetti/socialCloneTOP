@@ -28,6 +28,7 @@ function Profile() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userProfileData = await fetchUserProfileData(user.uid);
+        console.log("user id: ", auth.currentUser.id);
         setUser(userProfileData);
 
         const userTweets = await fetchUserTweets();

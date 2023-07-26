@@ -19,7 +19,27 @@ function Homepage() {
   const [displayedTweets, setDisplayedTweets] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [showExplore, setShowExplore] = useState(false);
+  const [exploreData, setExploreData] = useState(null);
 
+  //in fetch tweets se exploreData esiste, tweetsData è explore data che viene assegnato allo stato tweets
+  //modifichiamo exploreTweets che gli passiamo sempre exploreData, se è null exploreTweets agisce come agisce adesso
+  //se non è null exploreTweets andra a rifetchare e poi ridare solo i tweets che erano presenti in exploreData ed infine
+  //fetch tweets assegnerà gli stessi tweets ma con likes modificato/i allo stato tweets
+  //che risulterà cambiato e l'useEffect che ha displayedTweets verra triggherato rirenderizzando gli stessi tweets ma con i like diversi
+  /* 
+  const fetchTweets = async () => {
+  let tweetsData;
+  if (showExplore) {
+    tweetsData = await exploreTweets(exploreData);
+    setExploreData(tweetsData);
+  } else {
+    tweetsData = await fetchFollowingUsersTweets();
+  }
+
+  setTweets(tweetsData);
+  setDataLoaded(tweetsData.length > 0);
+};
+  */
   const handleToggleLike = async (tweetId, authorId) => {
     try {
       await toggleLike(tweetId, authorId);
@@ -49,22 +69,19 @@ function Homepage() {
   const fetchTweets = async () => {
     let tweetsData;
     if (showExplore) {
-      tweetsData = await exploreTweets();
+      tweetsData = await exploreTweets(exploreData);
+      setExploreData(tweetsData);
     } else {
       tweetsData = await fetchFollowingUsersTweets();
     }
 
-    setTweets(tweetsData); // Invertemo l'array per ottenere i tweet più recenti per primi
+    setTweets(tweetsData);
     setDataLoaded(tweetsData.length > 0);
   };
 
   useEffect(() => {
     fetchTweets();
   }, [showExplore]);
-
-  useEffect(() => {
-    console.log(auth.currentUser.uid);
-  }, []);
 
   const handleLoadMore = () => {
     if (endIndex < tweets.length) {
@@ -82,7 +99,6 @@ function Homepage() {
 
   useEffect(() => {
     const displayedTweetsSlice = tweets.slice(startIndex, endIndex);
-    console.log("tweets", tweets);
     setDisplayedTweets(displayedTweetsSlice);
   }, [tweets, startIndex, endIndex]);
 
@@ -177,6 +193,3 @@ function Homepage() {
 }
 
 export default Homepage;
-
-//gestione like nel component profiletweets vedi perchè quando sono 0 non si vedono proprio nel profilo
-//evitare che explore venga triggherato quando metto like e fetch nuovi randomici tweet

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchUserTweets, toggleLike } from "../firebaseUtils";
+import { fetchUserTweets, toggleLike, auth } from "../firebaseUtils";
 import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
@@ -9,7 +9,6 @@ const Profiletweets = (props) => {
   const [loading, setLoading] = useState(true);
   const [startIndex, setStartIndex] = useState(0);
   const [endIndex, setEndIndex] = useState(5);
-
   const { user } = props;
 
   useEffect(() => {
@@ -36,11 +35,11 @@ const Profiletweets = (props) => {
     }
   };
 
-  const displayedTweets = tweets.slice(startIndex, endIndex); // Inverte l'ordine dei tweet da mostrare
+  const displayedTweets = tweets.slice(startIndex, endIndex);
 
-  const handleToggleLike = async (tweetId, authorId) => {
+  const handleToggleLike = async (tweetId, userId) => {
     try {
-      await toggleLike(tweetId, authorId);
+      await toggleLike(tweetId, userId);
       const updatedTweets = await fetchUserTweets();
 
       // Aggiorna lo stato con i nuovi tweet

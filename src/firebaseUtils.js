@@ -163,9 +163,16 @@ const fetchUserTweets = async (limit) => {
       const userTweetsData = userTweetsDocSnapshot.data();
 
       const tweets = userTweetsData.tweets.slice(-limit).map((tweetObj) => ({
+        comments: tweetObj.comments,
         content: tweetObj.content,
-        timestamp: tweetObj.timestamp,
         date: tweetObj.date,
+        key: tweetObj.key,
+        likedBy: tweetObj.likedBy,
+        likes: tweetObj.likes,
+        name: tweetObj.name,
+        rt: tweetObj.rt,
+        timestamp: tweetObj.timestamp,
+        userId: tweetObj.userId,
       }));
 
       return tweets;
@@ -411,47 +418,76 @@ const fetchFollowingUsersTweets = async () => {
   }
 }; */
 
-const exploreTweets = async () => {
-  try {
-    const db = getFirestore();
-    const auth = getAuth();
-    const userId = auth.currentUser.uid;
+const exploreTweets = async (exploreData) => {
+  if (exploreData === null) {
+    try {
+      const db = getFirestore();
+      const auth = getAuth();
+      const userId = auth.currentUser.uid;
 
-    // Step 1: Fetch all tweets from "usertweets" collection
-    const q = query(collection(db, "usertweets"));
-    const querySnapshot = await getDocs(q);
+      // Step 1: Fetch all tweets from "usertweets" collection
+      const q = query(collection(db, "usertweets"));
+      const querySnapshot = await getDocs(q);
 
-    const tweets = [];
-    querySnapshot.forEach((doc) => {
-      const userData = doc.data();
-      if (userData.userId !== userId && Array.isArray(userData.tweets)) {
-        tweets.push(...userData.tweets);
+      const tweets = [];
+      querySnapshot.forEach((doc) => {
+        const userData = doc.data();
+        if (userData.userId !== userId && Array.isArray(userData.tweets)) {
+          tweets.push(...userData.tweets);
+        }
+      });
+
+      // Step 2: Select random tweets from the fetched tweets
+      const randomTweets = [];
+      const totalTweets = tweets.length;
+      const numberOfTweetsToShow = totalTweets;
+      const indexes = new Set();
+
+      while (indexes.size < numberOfTweetsToShow) {
+        const randomIndex = Math.floor(Math.random() * totalTweets);
+        if (!indexes.has(randomIndex)) {
+          indexes.add(randomIndex);
+          randomTweets.push(tweets[randomIndex]);
+        }
       }
-    });
 
-    // Log all tweets fetched from "usertweets" collection
-    console.log("All tweets from usertweets:", tweets);
-
-    // Step 2: Select random tweets from the fetched tweets
-    const randomTweets = [];
-    const totalTweets = tweets.length;
-    const numberOfTweetsToShow = totalTweets;
-    const indexes = new Set();
-
-    while (indexes.size < numberOfTweetsToShow) {
-      const randomIndex = Math.floor(Math.random() * totalTweets);
-      if (!indexes.has(randomIndex)) {
-        indexes.add(randomIndex);
-        randomTweets.push(tweets[randomIndex]);
-      }
+      return randomTweets;
+    } catch (error) {
+      console.error("Error fetching random tweets:", error);
     }
+  } else {
+    // Step 1: Fetch tweets from "usertweets" collection on the db using exploreData
+    try {
+      const db = getFirestore();
+      const auth = getAuth();
+      const userId = auth.currentUser.uid;
 
-    // Log the random tweets selected
-    console.log("Random tweets:", randomTweets);
+      const q = query(collection(db, "usertweets"));
+      const querySnapshot = await getDocs(q);
 
-    return randomTweets;
-  } catch (error) {
-    console.error("Error fetching random tweets:", error);
+      const tweets = [];
+      querySnapshot.forEach((doc) => {
+        const userData = doc.data();
+        if (userData.userId !== userId && Array.isArray(userData.tweets)) {
+          tweets.push(...userData.tweets);
+        }
+      });
+      // Create a mapping of tweets in 'tweets' array using tweet keys as the mapping keys
+      const tweetsMapping = {};
+      tweets.forEach((tweet) => {
+        tweetsMapping[tweet.key] = tweet;
+      });
+
+      //Replace each element in 'exploreData' with the corresponding tweet
+      //from the 'tweetsMapping' to maintain the existing rendering order
+      //but thanks to the fetching from the db with the interactions upgraded to the latest and in realtime
+      const filteredTweets = exploreData.map((element) => {
+        return tweetsMapping[element.key];
+      });
+      return filteredTweets;
+    } catch (error) {
+      console.error("Error fetching tweets from exploreData:", error);
+    }
   }
 };
 
@@ -473,7 +509,6 @@ const toggleLike = async (tweetId, userId) => {
   const userData = tweetDoc.data();
 
   const tweetData = userData.tweets;
-
   const tweetIndex = tweetData.findIndex((tweet) => tweet.key === tweetId);
 
   if (tweetIndex === -1) {
