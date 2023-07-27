@@ -122,6 +122,7 @@ const addTweet = async (tweetContent) => {
     comments: 0,
     name: userName,
     likedBy: [],
+    rtBy: [],
     userId: userId,
   };
 
@@ -139,10 +140,6 @@ const addTweet = async (tweetContent) => {
     }
 
     // Log, to be removed
-    const createdUserSnapshot = await getDoc(userTweetsDocRef);
-    const createdUserData = createdUserSnapshot.data();
-    console.log("New user created:", createdUserData);
-
     console.log("Tweet added successfully.");
   } catch (error) {
     console.error("Error adding tweet: ", error);
@@ -173,6 +170,7 @@ const fetchUserTweets = async (limit) => {
         rt: tweetObj.rt,
         timestamp: tweetObj.timestamp,
         userId: tweetObj.userId,
+        retweeted: tweetObj.retweeted,
       }));
 
       return tweets;
@@ -343,8 +341,6 @@ const fetchFollowingUsersTweets = async () => {
       tweetsArray.push(...userTweetsData.tweets);
     });
 
-    console.log("not sorted in fu", tweetsArray);
-
     // Ordiniamo i tweet per data e, in caso di stessa data, per timestamp (in ordine decrescente)
     tweetsArray.sort((a, b) => {
       if (a.date === b.date) {
@@ -354,69 +350,12 @@ const fetchFollowingUsersTweets = async () => {
       }
     });
 
-    console.log("sorted in firebase utilty", tweetsArray);
     return tweetsArray;
   } catch (error) {
     console.error("Error fetching following users' tweets:", error);
     return [];
   }
 };
-
-/*
-const fetchFollowingUsersTweets = async () => {
-  const auth = getAuth();
-  const loggedInUserId = auth.currentUser.uid;
-
-  const db = getFirestore();
-  const loggedInUserRef = doc(db, "users", loggedInUserId);
-  const loggedInUserSnapshot = await getDoc(loggedInUserRef);
-
-  if (!loggedInUserSnapshot.exists()) {
-    console.error("User not found.");
-    return [];
-  }
-
-  const loggedInUserData = loggedInUserSnapshot.data();
-
-  if (
-    !loggedInUserData.whoFollowing ||
-    loggedInUserData.whoFollowing.length === 0
-  ) {
-    console.log("User is not following anyone.");
-    return [];
-  }
-
-  try {
-    const followingUsersIds = loggedInUserData.whoFollowing.map(
-      (user) => user.id
-    );
-
-    // Query per ottenere i tweet degli utenti seguiti
-    const querySnapshot = await getDocs(
-      query(
-        collection(db, "usertweets"),
-        where("__name__", "in", followingUsersIds)
-      )
-    );
-
-    const tweetsArray = [];
-
-    querySnapshot.forEach((doc) => {
-      const userTweetsData = doc.data();
-      tweetsArray.push(...userTweetsData.tweets);
-    });
-
-    console.log("not sorted in fu", tweetsArray);
-
-    // Ordiniamo i tweet per timestamp in ordine decrescente (dal più recente al meno recente)
-    tweetsArray.sort((a, b) => b.timestamp - a.timestamp);
-    console.log("sortedin fu", tweetsArray);
-    return tweetsArray;
-  } catch (error) {
-    console.error("Error fetching following users' tweets:", error);
-    return [];
-  }
-}; */
 
 const exploreTweets = async (exploreData) => {
   if (exploreData === null) {
@@ -493,6 +432,7 @@ const exploreTweets = async (exploreData) => {
 
 const toggleLike = async (tweetId, userId) => {
   // Ottieni il riferimento al documento del tweet corrispondente
+
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
   const loggedUser = auth.currentUser.uid;
@@ -507,7 +447,6 @@ const toggleLike = async (tweetId, userId) => {
 
   // Ottieni i dati del tweet dal documento
   const userData = tweetDoc.data();
-
   const tweetData = userData.tweets;
   const tweetIndex = tweetData.findIndex((tweet) => tweet.key === tweetId);
 
@@ -518,9 +457,11 @@ const toggleLike = async (tweetId, userId) => {
 
   const tweet = tweetData[tweetIndex];
   const isLiked = tweet.likedBy.includes(loggedUser);
+  console.log(tweet);
 
   // Aggiungi o rimuovi l'userId dall'array likedby
   if (isLiked) {
+    console.log(isLiked);
     const updatedLikedBy = tweet.likedBy.filter((id) => id !== loggedUser);
     const tweetsBefore = tweetData.slice(0, tweetIndex);
     const tweetsAfter = tweetData.slice(tweetIndex + 1);
@@ -532,6 +473,8 @@ const toggleLike = async (tweetId, userId) => {
       { ...tweet, likedBy: updatedLikedBy, likes: updatedLikes },
       ...tweetsAfter,
     ];
+
+    console.log("updatedTweets minus 1", updatedTweets);
 
     // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
     await updateDoc(userDocRef, { tweets: updatedTweets });
@@ -554,9 +497,114 @@ const toggleLike = async (tweetId, userId) => {
       { ...tweet, likedBy: updatedLikedBy, likes: updatedLikes },
       ...tweetsAfter,
     ];
+    console.log("updatedTweets plus 1", updatedTweets);
 
     // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
     await updateDoc(userDocRef, { tweets: updatedTweets });
+  }
+};
+
+const toggleRt = async (tweetId, userId) => {
+  //Ottieni il riferimento al documento del tweet corrispondente
+  const db = getFirestore();
+  const userDocRef = doc(db, "usertweets", userId);
+
+  //utente che retweet
+  const loggedUser = auth.currentUser.uid;
+
+  //Ottieni il riferimento al documento dell user che retwitta
+  const userTweetsRef = doc(db, "usertweets", loggedUser);
+  const retweetDoc = await getDoc(userTweetsRef);
+  const retweetData = retweetDoc.data();
+
+  // Ottieni il documento del tweet
+  const tweetDoc = await getDoc(userDocRef);
+
+  if (!tweetDoc.exists()) {
+    console.log("Tweet non trovato!");
+    return;
+  }
+
+  // Ottieni i dati del tweet dal documento
+  const userData = tweetDoc.data();
+  const tweetData = userData.tweets;
+  const tweetIndex = tweetData.findIndex((tweet) => tweet.key === tweetId);
+
+  if (tweetIndex === -1) {
+    console.log("Tweet non trovato!");
+    return;
+  }
+
+  const tweet = tweetData[tweetIndex];
+  console.log("tweet", tweet);
+  console.log("loggeduser", loggedUser);
+
+  const isRt = tweet.rtBy ? tweet.rtBy.includes(loggedUser) : false;
+  console.log("isRt", isRt);
+
+  // Aggiungi o rimuovi l'userId dall'array likedby
+  if (isRt) {
+    const updatedRtBy = tweet.rtBy.filter((id) => id !== loggedUser);
+    const tweetsBefore = tweetData.slice(0, tweetIndex);
+    const tweetsAfter = tweetData.slice(tweetIndex + 1);
+    const updatedRt = tweet.rt - 1;
+
+    // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato e gli oggetti tweet successivi
+    const updatedTweets = [
+      ...tweetsBefore,
+      { ...tweet, rtBy: updatedRtBy, rt: updatedRt },
+      ...tweetsAfter,
+    ];
+
+    // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
+    await updateDoc(userDocRef, { tweets: updatedTweets });
+
+    // Rimuovi anche il tweet da retweetData per il documento dell'utente che retwitta
+    const updatedRetweetData = {
+      ...retweetData,
+      tweets: retweetData.tweets.filter((tweet) => tweet.key !== tweetId),
+    };
+    await updateDoc(userTweetsRef, updatedRetweetData);
+  } else {
+    const updatedRtBy = [...tweet.rtBy, loggedUser];
+    console.log("updatedRtBy", updatedRtBy);
+
+    // Creare una copia degli oggetti tweet precedenti l'oggetto specifico
+    const tweetsBefore = tweetData.slice(0, tweetIndex);
+    // Creare una copia degli oggetti tweet che si trovano dopo l'oggetto specifico
+    const tweetsAfter = tweetData.slice(tweetIndex + 1);
+
+    // Aggiornare il parametro likes nell'oggetto tweet corrispondente
+    const updatedRt = tweet.rt + 1;
+
+    // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato con il valore likes aggiornato e gli oggetti tweet successivi
+    const updatedTweets = [
+      ...tweetsBefore,
+      { ...tweet, rtBy: updatedRtBy, rt: updatedRt },
+      ...tweetsAfter,
+    ];
+
+    // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
+    await updateDoc(userDocRef, { tweets: updatedTweets });
+
+    // Aggiungi anche il tweet a retweetData per il documento dell'utente che retwitta
+    const updatedRetweetData = {
+      ...retweetData,
+      tweets: [
+        ...retweetData.tweets,
+        {
+          ...tweet,
+          rtBy: [loggedUser],
+          likedBy: [],
+          retweeted: true,
+          likes: 0,
+          comments: 0,
+          rt: 0,
+        },
+      ],
+    };
+    console.log("updatedRetData", updatedRetweetData);
+    await updateDoc(userTweetsRef, updatedRetweetData);
   }
 };
 
@@ -572,5 +620,6 @@ export {
   fetchFollowingUsersTweets,
   exploreTweets,
   toggleLike,
+  toggleRt,
   auth,
 };

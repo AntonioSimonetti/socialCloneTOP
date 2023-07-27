@@ -4,6 +4,7 @@ import {
   fetchFollowingUsersTweets,
   exploreTweets,
   toggleLike,
+  toggleRt,
   auth,
 } from "../firebaseUtils";
 import "../styles/home.css";
@@ -21,25 +22,6 @@ function Homepage() {
   const [showExplore, setShowExplore] = useState(false);
   const [exploreData, setExploreData] = useState(null);
 
-  //in fetch tweets se exploreData esiste, tweetsData è explore data che viene assegnato allo stato tweets
-  //modifichiamo exploreTweets che gli passiamo sempre exploreData, se è null exploreTweets agisce come agisce adesso
-  //se non è null exploreTweets andra a rifetchare e poi ridare solo i tweets che erano presenti in exploreData ed infine
-  //fetch tweets assegnerà gli stessi tweets ma con likes modificato/i allo stato tweets
-  //che risulterà cambiato e l'useEffect che ha displayedTweets verra triggherato rirenderizzando gli stessi tweets ma con i like diversi
-  /* 
-  const fetchTweets = async () => {
-  let tweetsData;
-  if (showExplore) {
-    tweetsData = await exploreTweets(exploreData);
-    setExploreData(tweetsData);
-  } else {
-    tweetsData = await fetchFollowingUsersTweets();
-  }
-
-  setTweets(tweetsData);
-  setDataLoaded(tweetsData.length > 0);
-};
-  */
   const handleToggleLike = async (tweetId, authorId) => {
     try {
       await toggleLike(tweetId, authorId);
@@ -49,6 +31,15 @@ function Homepage() {
         "Errore durante l'aggiornamento del like del tweet:",
         error
       );
+    }
+  };
+
+  const handleToggleRt = async (tweetId, authorId) => {
+    try {
+      await toggleRt(tweetId, authorId);
+      fetchTweets();
+    } catch (error) {
+      console.error("errore durante l'aggiornamento dei rt del tweet:", error);
     }
   };
 
@@ -167,7 +158,10 @@ function Homepage() {
                     <img src={heartsvg} alt="likeicon" />
                     <p>{tweet.likes}</p>
                   </div>
-                  <div className="rtDiv">
+                  <div
+                    className="rtDiv"
+                    onClick={() => handleToggleRt(tweet.key, tweet.userId)}
+                  >
                     <img src={rtsvg} alt="rticon" />
                     <p>{tweet.rt}</p>
                   </div>
