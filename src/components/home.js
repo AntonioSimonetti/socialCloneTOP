@@ -21,6 +21,7 @@ function Homepage() {
   const [dataLoaded, setDataLoaded] = useState(false);
   const [showExplore, setShowExplore] = useState(false);
   const [exploreData, setExploreData] = useState(null);
+  const [user, setUser] = useState(null);
 
   const handleToggleLike = async (tweetId, authorId) => {
     try {
@@ -121,6 +122,11 @@ function Homepage() {
     }
   }, [tweets]);
 
+  useEffect(() => {
+    const utente = auth.currentUser;
+    setUser(utente);
+  }, []);
+
   return (
     <div className="homepage">
       <div className="headerDiv">
@@ -136,42 +142,88 @@ function Homepage() {
           <p>Loading...</p>
         ) : (
           <div className="tweetsDiv">
-            {displayedTweets.map((tweet) => (
-              <div key={tweet.key} className="tweet">
-                <div className="topTweetDiv">
-                  <h3>{tweet.name}</h3>
-                  <p>idplaceholder</p>
-                  <p>-</p>
-                  <p>{tweet.date}</p>
-                  <p>{tweet.timestamp}</p>
-                </div>
+            {displayedTweets.map((tweet) => {
+              if (tweet.retweeted) {
+                // Contenuto del retweet
+                return (
+                  <div key={tweet.key} className="tweet">
+                    <div className="topTweetDiv">
+                      <h3>Retweeted by {tweet.rtName}: </h3>
+                      <h3>{tweet.name}</h3>
+                      <p>idplaceholder</p>
+                      <p>-</p>
+                      <p>{tweet.date}</p>
+                      <p>{tweet.timestamp}</p>
+                    </div>
 
-                <div className="contentDiv">
-                  <p>{tweet.content}</p>
-                </div>
+                    <div className="contentDiv">
+                      <p>{tweet.content}</p>
+                    </div>
 
-                <div className="reactionsDiv">
-                  <div
-                    className="likesDiv"
-                    onClick={() => handleToggleLike(tweet.key, tweet.userId)}
-                  >
-                    <img src={heartsvg} alt="likeicon" />
-                    <p>{tweet.likes}</p>
+                    <div className="reactionsDiv">
+                      <div
+                        className="likesDiv"
+                        onClick={() => handleToggleLike(tweet.key, user.uid)}
+                      >
+                        <img src={heartsvg} alt="likeicon" />
+                        <p>{tweet.likes}</p>
+                      </div>
+                      <div
+                        className="rtDiv"
+                        onClick={() => handleToggleRt(tweet.key, tweet.userId)}
+                      >
+                        <img src={rtsvg} alt="rticon" />
+                        <p>{tweet.rt}</p>
+                      </div>
+                      <div className="commentsDiv">
+                        <img src={commentsvg} alt="commenticon" />
+                        <p>{tweet.comments}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div
-                    className="rtDiv"
-                    onClick={() => handleToggleRt(tweet.key, tweet.userId)}
-                  >
-                    <img src={rtsvg} alt="rticon" />
-                    <p>{tweet.rt}</p>
+                );
+              } else {
+                // Contenuto del tweet originale
+                return (
+                  <div key={tweet.key} className="tweet">
+                    <div className="topTweetDiv">
+                      <h3>{tweet.name}</h3>
+                      <p>idplaceholder</p>
+                      <p>-</p>
+                      <p>{tweet.date}</p>
+                      <p>{tweet.timestamp}</p>
+                    </div>
+
+                    <div className="contentDiv">
+                      <p>{tweet.content}</p>
+                    </div>
+
+                    <div className="reactionsDiv">
+                      <div
+                        className="likesDiv"
+                        onClick={() =>
+                          handleToggleLike(tweet.key, tweet.userId)
+                        }
+                      >
+                        <img src={heartsvg} alt="likeicon" />
+                        <p>{tweet.likes}</p>
+                      </div>
+                      <div
+                        className="rtDiv"
+                        onClick={() => handleToggleRt(tweet.key, tweet.userId)}
+                      >
+                        <img src={rtsvg} alt="rticon" />
+                        <p>{tweet.rt}</p>
+                      </div>
+                      <div className="commentsDiv">
+                        <img src={commentsvg} alt="commenticon" />
+                        <p>{tweet.comments}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="commentsDiv">
-                    <img src={commentsvg} alt="commenticon" />
-                    <p>{tweet.comments}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+                );
+              }
+            })}
           </div>
         )}
         <div className="buttonsDiv">

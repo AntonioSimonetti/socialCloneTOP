@@ -349,7 +349,6 @@ const fetchFollowingUsersTweets = async () => {
         return b.date.localeCompare(a.date);
       }
     });
-
     return tweetsArray;
   } catch (error) {
     console.error("Error fetching following users' tweets:", error);
@@ -376,9 +375,19 @@ const exploreTweets = async (exploreData) => {
         }
       });
 
+      const uniqueTweets = [];
+      const seenIds = new Set();
+
+      tweets.forEach((tweet) => {
+        if (!seenIds.has(tweet.key)) {
+          seenIds.add(tweet.key);
+          uniqueTweets.push(tweet);
+        }
+      });
+
       // Step 2: Select random tweets from the fetched tweets
       const randomTweets = [];
-      const totalTweets = tweets.length;
+      const totalTweets = uniqueTweets.length;
       const numberOfTweetsToShow = totalTweets;
       const indexes = new Set();
 
@@ -386,7 +395,7 @@ const exploreTweets = async (exploreData) => {
         const randomIndex = Math.floor(Math.random() * totalTweets);
         if (!indexes.has(randomIndex)) {
           indexes.add(randomIndex);
-          randomTweets.push(tweets[randomIndex]);
+          randomTweets.push(uniqueTweets[randomIndex]);
         }
       }
 
@@ -432,6 +441,8 @@ const exploreTweets = async (exploreData) => {
 
 const toggleLike = async (tweetId, userId) => {
   // Ottieni il riferimento al documento del tweet corrispondente
+  console.log("tweetkey", tweetId);
+  console.log("user.uid", userId);
 
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
@@ -441,7 +452,7 @@ const toggleLike = async (tweetId, userId) => {
   const tweetDoc = await getDoc(userDocRef);
 
   if (!tweetDoc.exists()) {
-    console.log("Tweet non trovato!");
+    console.log("Tweet non trovato1!");
     return;
   }
 
@@ -450,9 +461,88 @@ const toggleLike = async (tweetId, userId) => {
   const tweetData = userData.tweets;
   const tweetIndex = tweetData.findIndex((tweet) => tweet.key === tweetId);
 
+  //questa funzione con i rt non funzionava perchè il db è compromesso, da rifare a mano
+
   if (tweetIndex === -1) {
-    console.log("Tweet non trovato!");
-    return;
+    const userDocRef2 = collection(db, "usertweets");
+    const querySnapshot = await getDocs(userDocRef2);
+
+    let targetedTweet;
+    let documentId;
+    let arrayTweet = [];
+
+    querySnapshot.forEach((doc) => {
+      // Ogni "doc" rappresenta un documento nella collezione "usertweets"
+      const userData = doc.data();
+      const tweetData = userData.tweets;
+      console.log("tweetData", tweetData);
+      const tweet = tweetData.find((tweet) => tweet.key === tweetId);
+      console.log("tweet", tweet);
+
+      if (tweet) {
+        targetedTweet = tweet;
+        documentId = doc.id;
+        arrayTweet.push(...tweetData);
+      }
+    });
+
+    const tweetIndex = arrayTweet.findIndex((tweet) => tweet.key === tweetId);
+
+    console.log(targetedTweet);
+    console.log(documentId);
+
+    let arrayToModify = arrayTweet;
+    const isLiked = targetedTweet.likedBy.includes(loggedUser);
+    console.log(isLiked);
+    const recipientUserDocRef = doc(db, "usertweets", documentId);
+    console.log("targetedTweet", targetedTweet);
+    console.log("arraytomodify", arrayToModify);
+
+    if (isLiked) {
+      console.log("Il like è già presente. Rimuovendo il like...");
+
+      const updatedLikedBy = targetedTweet.likedBy.filter(
+        (id) => id !== loggedUser
+      );
+
+      const tweetsBefore = tweetData.slice(0, tweetIndex);
+      const tweetsAfter = tweetData.slice(tweetIndex + 1);
+      const updatedLikes = targetedTweet.likes - 1;
+
+      console.log("updatedLikedBy", updatedLikedBy);
+      console.log("bef", tweetsBefore);
+      console.log("targ", targetedTweet);
+      console.log("aft", tweetsAfter);
+
+      const updatedTweets = [
+        ...tweetsBefore,
+        { ...targetedTweet, likedBy: updatedLikedBy, likes: updatedLikes },
+        ...tweetsAfter,
+      ];
+      console.log("updatedTweets con like rimosso al rt", updatedTweets);
+
+      // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
+      await updateDoc(recipientUserDocRef, { tweets: updatedTweets });
+    } else {
+      console.log("Il like non è presente. Aggiungendo il like...");
+      const updatedLikedBy = [...targetedTweet.likedBy, loggedUser];
+      const tweetsBefore = arrayToModify.slice(0, tweetIndex);
+      const tweetsAfter = arrayToModify.slice(tweetIndex + 1);
+      const updatedLikes = targetedTweet.likes + 1;
+
+      console.log("aggiungo", tweetsBefore, tweetsAfter, updatedLikes);
+
+      const updatedTweets = [
+        ...tweetsBefore,
+        { ...targetedTweet, likedBy: updatedLikedBy, likes: updatedLikes },
+        ...tweetsAfter,
+      ];
+      console.log("updatedTweets con like aggiunto al rt", updatedTweets);
+
+      // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
+      await updateDoc(recipientUserDocRef, { tweets: updatedTweets });
+    }
+    console.log("fine toggle like di un rt");
   }
 
   const tweet = tweetData[tweetIndex];
@@ -511,6 +601,10 @@ const toggleRt = async (tweetId, userId) => {
 
   //utente che retweet
   const loggedUser = auth.currentUser.uid;
+  const userDocRefName = doc(db, "users", loggedUser);
+  const nameDocData = await getDoc(userDocRefName);
+  const loggedUserData = nameDocData.data();
+  const loggedUserName = loggedUserData.name;
 
   //Ottieni il riferimento al documento dell user che retwitta
   const userTweetsRef = doc(db, "usertweets", loggedUser);
@@ -532,6 +626,29 @@ const toggleRt = async (tweetId, userId) => {
 
   if (tweetIndex === -1) {
     console.log("Tweet non trovato!");
+    const userDocRefAll = collection(db, "usertweets");
+    const querySnapshot = await getDocs(userDocRefAll);
+
+    let targetedTweet;
+    let documentId;
+    let arrayTweet = [];
+
+    querySnapshot.forEach((doc) => {
+      // Ogni "doc" rappresenta un documento nella collezione "usertweets"
+      const userData = doc.data();
+      const tweetData = userData.tweets;
+      const tweet = tweetData.find((tweet) => tweet.key === tweetId);
+
+      if (tweet) {
+        targetedTweet = tweet;
+        documentId = doc.id;
+        arrayTweet.push(...tweetData);
+      }
+    });
+
+    console.log("targetedTweet", targetedTweet);
+    const updatedRtBy = [...targetedTweet.rtBy, loggedUser];
+    console.log("updatedRtBy", updatedRtBy);
     return;
   }
 
@@ -560,10 +677,15 @@ const toggleRt = async (tweetId, userId) => {
     await updateDoc(userDocRef, { tweets: updatedTweets });
 
     // Rimuovi anche il tweet da retweetData per il documento dell'utente che retwitta
+    console.log(retweetData);
     const updatedRetweetData = {
       ...retweetData,
-      tweets: retweetData.tweets.filter((tweet) => tweet.key !== tweetId),
+      tweets: retweetData.tweets.filter(
+        (tweet) => tweet.originalId !== tweetId
+      ),
     };
+    console.log(retweetData);
+    console.log(updatedRetweetData);
     await updateDoc(userTweetsRef, updatedRetweetData);
   } else {
     const updatedRtBy = [...tweet.rtBy, loggedUser];
@@ -586,20 +708,24 @@ const toggleRt = async (tweetId, userId) => {
 
     // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
     await updateDoc(userDocRef, { tweets: updatedTweets });
-
     // Aggiungi anche il tweet a retweetData per il documento dell'utente che retwitta
+    const tweetKey = doc(collection(db, "usertweets", userId, "tweets")).id; // Genera una chiave unica
+
     const updatedRetweetData = {
       ...retweetData,
       tweets: [
         ...retweetData.tweets,
         {
           ...tweet,
+          key: tweetKey,
           rtBy: [loggedUser],
           likedBy: [],
           retweeted: true,
           likes: 0,
           comments: 0,
           rt: 0,
+          rtName: loggedUserName,
+          originalId: tweet.key,
         },
       ],
     };
