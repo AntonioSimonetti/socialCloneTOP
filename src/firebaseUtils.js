@@ -595,9 +595,53 @@ const toggleLike = async (tweetId, userId) => {
 };
 
 const toggleRt = async (tweetId, userId) => {
+  console.log(tweetId, userId);
   //Ottieni il riferimento al documento del tweet corrispondente
+
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
+  //LOGIC TO NOT ALLOW RT OF YOUR OWN POST AND RT
+
+  const userDocAll = collection(db, "usertweets");
+  const querySnapshotAll = await getDocs(userDocAll);
+
+  let uniqueTweet;
+  let uniqueArrayTweet = [];
+
+  let foundOwnRt = false;
+
+  querySnapshotAll.forEach((doc) => {
+    const userData = doc.data();
+    const tweetData = userData.tweets;
+    const tweet = tweetData.find((tweet) => tweet.key === tweetId);
+
+    if (tweet) {
+      uniqueTweet = tweet;
+      uniqueArrayTweet.push(...tweetData);
+    }
+  });
+
+  let originalId = uniqueTweet.originalId;
+  const loggedUserRt = auth.currentUser.uid;
+
+  querySnapshotAll.forEach((doc) => {
+    const userData = doc.data();
+    const tweetData = userData.tweets;
+    const tweet = tweetData.find((tweet) => tweet.key === originalId);
+
+    if (tweet) {
+      if (tweet.userId === loggedUserRt) {
+        console.log("non puoi retwittare un tuo stesso post/rt");
+        foundOwnRt = true;
+      }
+    }
+  });
+
+  if (foundOwnRt) {
+    return; // Esce completamente dalla funzione
+  }
+  console.log("questo non lo vedi");
+  //END LOGIC TO NOT ALLOW RT OF YOUR OWN POST AND RT
 
   //utente che retweet
   const loggedUser = auth.currentUser.uid;
@@ -622,10 +666,11 @@ const toggleRt = async (tweetId, userId) => {
   // Ottieni i dati del tweet dal documento
   const userData = tweetDoc.data();
   const tweetData = userData.tweets;
+  console.log("tweetData", tweetData);
+
   const tweetIndex = tweetData.findIndex((tweet) => tweet.key === tweetId);
 
   if (tweetIndex === -1) {
-    console.log("Tweet non trovato!");
     const userDocRefAll = collection(db, "usertweets");
     const querySnapshot = await getDocs(userDocRefAll);
 
@@ -645,19 +690,101 @@ const toggleRt = async (tweetId, userId) => {
         arrayTweet.push(...tweetData);
       }
     });
+    const recipientUserDocRef = doc(db, "usertweets", documentId);
+    const retweetIndex = arrayTweet.findIndex((tweet) => tweet.key === tweetId);
+    const isRt = targetedTweet.rtBy
+      ? targetedTweet.rtBy.includes(loggedUser)
+      : false;
+    console.log(isRt);
+    if (isRt) {
+      let targetedTweetTwo;
+      let documentIdTwo;
+      let arrayTweetTwo = [];
 
-    console.log("targetedTweet", targetedTweet);
-    const updatedRtBy = [...targetedTweet.rtBy, loggedUser];
-    console.log("updatedRtBy", updatedRtBy);
+      querySnapshot.forEach((doc) => {
+        // Ogni "doc" rappresenta un documento nella collezione "usertweets"
+        const userData = doc.data();
+        const tweetData = userData.tweets;
+        const tweet = tweetData.find(
+          (tweet) => tweet.key === targetedTweet.originalId
+        );
+
+        if (tweet) {
+          targetedTweetTwo = tweet;
+          console.log(targetedTweet);
+          documentIdTwo = doc.id;
+          arrayTweetTwo.push(...tweetData);
+        }
+      });
+
+      const recipientUserDocRefTwo = doc(db, "usertweets", documentIdTwo);
+
+      //logica per rimuovere
+      const updatedRtByTwo = targetedTweetTwo.rtBy.filter(
+        (id) => id !== loggedUser
+      );
+      const tweetsBeforeTwo = arrayTweetTwo.slice(0, retweetIndex);
+      const tweetsAfterTwo = arrayTweetTwo.slice(retweetIndex + 1);
+      const updatedRtTwo = targetedTweetTwo.rt - 1;
+
+      // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato e gli oggetti tweet successivi
+      const updatedTweets = [
+        ...tweetsBeforeTwo,
+        { ...targetedTweetTwo, rtBy: updatedRtByTwo, rt: updatedRtTwo },
+        ...tweetsAfterTwo,
+      ];
+
+      await updateDoc(recipientUserDocRefTwo, { tweets: updatedTweets });
+
+      // Togli anche il tweet al documento dell'utente che retwitta
+      const keepTweets = arrayTweet.filter((tweet) => tweet.key !== tweetId);
+
+      await updateDoc(userTweetsRef, { tweets: keepTweets });
+    } else {
+      const updatedRtBy = [...targetedTweet.rtBy, loggedUser];
+      // Creare una copia degli oggetti tweet precedenti l'oggetto specifico
+      const tweetsBefore = arrayTweet.slice(0, retweetIndex);
+      // Creare una copia degli oggetti tweet che si trovano dopo l'oggetto specifico
+      const tweetsAfter = arrayTweet.slice(retweetIndex + 1);
+      // Aggiornare il parametro likes nell'oggetto tweet corrispondente
+      const updatedRt = targetedTweet.rt + 1;
+      // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato con il valore likes aggiornato e gli oggetti tweet successivi
+      const updatedTweets = [
+        ...tweetsBefore,
+        { ...targetedTweet, rtBy: updatedRtBy, rt: updatedRt },
+        ...tweetsAfter,
+      ];
+      // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
+      await updateDoc(recipientUserDocRef, { tweets: updatedTweets });
+
+      // Aggiungi anche il tweet al documento dell'utente che retwitta
+      const tweetKey = doc(collection(db, "usertweets", userId, "tweets")).id; // Genera una chiave unica
+      const updatedRetweetData = {
+        ...retweetData,
+        tweets: [
+          ...retweetData.tweets,
+          {
+            ...targetedTweet,
+            key: tweetKey,
+            rtBy: [loggedUser],
+            likedBy: [],
+            retweeted: true,
+            likes: 0,
+            comments: 0,
+            rt: 0,
+            rtName: loggedUserName,
+            originalId: targetedTweet.key,
+          },
+        ],
+      };
+      await updateDoc(userTweetsRef, updatedRetweetData);
+    }
+
     return;
   }
 
   const tweet = tweetData[tweetIndex];
-  console.log("tweet", tweet);
-  console.log("loggeduser", loggedUser);
-
   const isRt = tweet.rtBy ? tweet.rtBy.includes(loggedUser) : false;
-  console.log("isRt", isRt);
 
   // Aggiungi o rimuovi l'userId dall'array likedby
   if (isRt) {
@@ -677,19 +804,15 @@ const toggleRt = async (tweetId, userId) => {
     await updateDoc(userDocRef, { tweets: updatedTweets });
 
     // Rimuovi anche il tweet da retweetData per il documento dell'utente che retwitta
-    console.log(retweetData);
     const updatedRetweetData = {
       ...retweetData,
       tweets: retweetData.tweets.filter(
         (tweet) => tweet.originalId !== tweetId
       ),
     };
-    console.log(retweetData);
-    console.log(updatedRetweetData);
     await updateDoc(userTweetsRef, updatedRetweetData);
   } else {
     const updatedRtBy = [...tweet.rtBy, loggedUser];
-    console.log("updatedRtBy", updatedRtBy);
 
     // Creare una copia degli oggetti tweet precedenti l'oggetto specifico
     const tweetsBefore = tweetData.slice(0, tweetIndex);
@@ -729,7 +852,6 @@ const toggleRt = async (tweetId, userId) => {
         },
       ],
     };
-    console.log("updatedRetData", updatedRetweetData);
     await updateDoc(userTweetsRef, updatedRetweetData);
   }
 };
