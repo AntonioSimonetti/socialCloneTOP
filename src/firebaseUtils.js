@@ -9,6 +9,7 @@ import {
   getDocs,
   query,
   where,
+  writeBatch,
 } from "firebase/firestore";
 
 import {
@@ -371,7 +372,10 @@ const exploreTweets = async (exploreData) => {
       querySnapshot.forEach((doc) => {
         const userData = doc.data();
         if (userData.userId !== userId && Array.isArray(userData.tweets)) {
-          tweets.push(...userData.tweets);
+          const filteredTweets = userData.tweets.filter(
+            (tweet) => !tweet.hasOwnProperty("originalId")
+          );
+          tweets.push(...filteredTweets);
         }
       });
 
@@ -417,7 +421,10 @@ const exploreTweets = async (exploreData) => {
       querySnapshot.forEach((doc) => {
         const userData = doc.data();
         if (userData.userId !== userId && Array.isArray(userData.tweets)) {
-          tweets.push(...userData.tweets);
+          const filteredTweets = userData.tweets.filter(
+            (tweet) => !tweet.hasOwnProperty("originalId")
+          );
+          tweets.push(...filteredTweets);
         }
       });
       // Create a mapping of tweets in 'tweets' array using tweet keys as the mapping keys
@@ -601,6 +608,9 @@ const toggleRt = async (tweetId, userId) => {
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
   //LOGIC TO NOT ALLOW RT OF YOUR OWN POST AND RT
+  //da aggiungere classe o pseudo classe per dare feedback all user
+  //user che fa il post può retwittare il post tutte le volte che vuole
+  //crea quindi altri rt ma il numero di rt a quel post non aumenta
 
   const userDocAll = collection(db, "usertweets");
   const querySnapshotAll = await getDocs(userDocAll);
@@ -637,7 +647,7 @@ const toggleRt = async (tweetId, userId) => {
     }
   });
 
-  if (foundOwnRt) {
+  if (foundOwnRt || uniqueTweet.deleted) {
     return; // Esce completamente dalla funzione
   }
   console.log("questo non lo vedi");
@@ -666,11 +676,10 @@ const toggleRt = async (tweetId, userId) => {
   // Ottieni i dati del tweet dal documento
   const userData = tweetDoc.data();
   const tweetData = userData.tweets;
-  console.log("tweetData", tweetData);
-
   const tweetIndex = tweetData.findIndex((tweet) => tweet.key === tweetId);
 
   if (tweetIndex === -1) {
+    console.log("index -1");
     const userDocRefAll = collection(db, "usertweets");
     const querySnapshot = await getDocs(userDocRefAll);
 
@@ -700,6 +709,7 @@ const toggleRt = async (tweetId, userId) => {
       let targetedTweetTwo;
       let documentIdTwo;
       let arrayTweetTwo = [];
+      let retweetIndexTwo = -1;
 
       querySnapshot.forEach((doc) => {
         // Ogni "doc" rappresenta un documento nella collezione "usertweets"
@@ -711,20 +721,28 @@ const toggleRt = async (tweetId, userId) => {
 
         if (tweet) {
           targetedTweetTwo = tweet;
-          console.log(targetedTweet);
+          console.log(targetedTweetTwo);
           documentIdTwo = doc.id;
           arrayTweetTwo.push(...tweetData);
+          retweetIndexTwo = arrayTweetTwo.indexOf(targetedTweetTwo);
+          console.log(retweetIndexTwo, "ciao");
         }
       });
 
       const recipientUserDocRefTwo = doc(db, "usertweets", documentIdTwo);
+      console.log("targetedTweetTwo", targetedTweetTwo);
+      console.log(arrayTweetTwo);
 
       //logica per rimuovere
       const updatedRtByTwo = targetedTweetTwo.rtBy.filter(
         (id) => id !== loggedUser
       );
-      const tweetsBeforeTwo = arrayTweetTwo.slice(0, retweetIndex);
-      const tweetsAfterTwo = arrayTweetTwo.slice(retweetIndex + 1);
+      const tweetsBeforeTwo = arrayTweetTwo.slice(0, retweetIndexTwo);
+      console.log("TweetsBeforeTwo", tweetsBeforeTwo);
+      const tweetsAfterTwo = arrayTweetTwo.slice(retweetIndexTwo + 1);
+      console.log("TweetsAfterTwo", tweetsAfterTwo);
+      console.log("retweetIndexTwo", retweetIndexTwo);
+
       const updatedRtTwo = targetedTweetTwo.rt - 1;
 
       // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato e gli oggetti tweet successivi
@@ -733,6 +751,8 @@ const toggleRt = async (tweetId, userId) => {
         { ...targetedTweetTwo, rtBy: updatedRtByTwo, rt: updatedRtTwo },
         ...tweetsAfterTwo,
       ];
+
+      console.log("updatedTweets", updatedTweets);
 
       await updateDoc(recipientUserDocRefTwo, { tweets: updatedTweets });
 
@@ -856,6 +876,74 @@ const toggleRt = async (tweetId, userId) => {
   }
 };
 
+//function to remove tweets
+const removeTweet = async (tweetId, userId) => {
+  // Ottieni il riferimento al documento del tweet corrispondente
+  console.log("eseguita");
+  console.log("tweetId", tweetId);
+  console.log("userId", userId);
+
+  const db = getFirestore();
+  const userDocRef = doc(db, "usertweets", userId);
+
+  // Ottieni il documento del tweet
+  const tweetDoc = await getDoc(userDocRef);
+
+  // Ottieni i dati del tweet dal documento
+  const userData = tweetDoc.data();
+  const tweetData = userData.tweets;
+
+  // Filtra l'array tweetData per rimuovere il tweet con la chiave tweetId
+  const updatedTweets = tweetData.filter((tweet) => tweet.key !== tweetId);
+
+  // Aggiorna il database
+  await updateDoc(userDocRef, { tweets: updatedTweets });
+
+  // Cerca tutti i documenti nella collezione "usertweets"
+  const querySnapshot = await getDocs(collection(db, "usertweets"));
+
+  // Per ogni documento, cerca e aggiorna i tweet con originalId uguale a tweetId
+  const batch = writeBatch(db);
+  querySnapshot.forEach((doc) => {
+    const userData = doc.data();
+    const tweetData = userData.tweets;
+
+    const updatedTweetsTwo = tweetData.map((tweet) => {
+      if (tweet.originalId === tweetId) {
+        return { ...tweet, content: "deleted tweet", deleted: true };
+      }
+      return tweet;
+    });
+
+    batch.update(doc.ref, { tweets: updatedTweetsTwo });
+  });
+
+  // Esegui le operazioni di aggiornamento nel batch
+  await batch.commit();
+
+  const targetedTweet = tweetData.find((tweet) => tweet.key === tweetId);
+  const targetTweetOriginalId = targetedTweet.originalId;
+
+  if (targetedTweet.retweeted) {
+    const batchTwo = writeBatch(db);
+
+    querySnapshot.forEach((doc) => {
+      const userData = doc.data();
+      const tweetData = userData.tweets;
+
+      const updatedTweetsThree = tweetData.map((tweet) => {
+        if (tweet.key === targetTweetOriginalId) {
+          return { ...tweet, rt: tweet.rt - 1 };
+        }
+        return tweet;
+      });
+      batchTwo.update(doc.ref, { tweets: updatedTweetsThree });
+    });
+
+    await batchTwo.commit();
+  }
+};
+
 export {
   createUserDocument,
   fetchUserProfileData,
@@ -869,5 +957,6 @@ export {
   exploreTweets,
   toggleLike,
   toggleRt,
+  removeTweet,
   auth,
 };

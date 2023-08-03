@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { fetchUserTweets, toggleLike, toggleRt, auth } from "../firebaseUtils";
+import {
+  fetchUserTweets,
+  toggleLike,
+  toggleRt,
+  removeTweet,
+  auth,
+} from "../firebaseUtils";
 import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
@@ -68,6 +74,18 @@ const Profiletweets = (props) => {
     }
   };
 
+  const handleRemoveTweet = async (tweetId, userId) => {
+    try {
+      await removeTweet(tweetId, userId);
+      const updatedTweets = await fetchUserTweets();
+
+      // Aggiorna lo stato con i nuovi tweet
+      setTweets(updatedTweets.reverse());
+    } catch (error) {
+      console.error("Errore durante la rimozione del tweet:", error);
+    }
+  };
+
   return (
     <div className="componentButtonDiv">
       {loading ? (
@@ -86,6 +104,11 @@ const Profiletweets = (props) => {
                     <p>-</p>
                     <p>{tweet.date}</p>
                     <p>{tweet.timestamp}</p>
+                    <button
+                      onClick={() => handleToggleRt(tweet.key, tweet.userId)}
+                    >
+                      X
+                    </button>
                   </div>
 
                   <div className="contentDiv">
@@ -124,6 +147,11 @@ const Profiletweets = (props) => {
                     <p>-</p>
                     <p>{tweet.date}</p>
                     <p>{tweet.timestamp}</p>
+                    <button
+                      onClick={() => handleRemoveTweet(tweet.key, tweet.userId)}
+                    >
+                      X
+                    </button>
                   </div>
 
                   <div className="contentDiv">
@@ -169,8 +197,5 @@ const Profiletweets = (props) => {
 
 export default Profiletweets;
 
-//gestire rt su utente loggato dei suoi tweet, massimo una volta? oppure piu' volte?
-//gestire rt da altro utente adesso solo 1 volta sullo stesso tweet altrimenti lo rimuove.
-//aggiungere logica rt a explore.
 //creare elimina tweet da profileTweets
 //MACRO FEATURE: EDIT PROFILE / COMMENTI / FOTO E VIDEO
