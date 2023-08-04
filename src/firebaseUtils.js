@@ -601,10 +601,8 @@ const toggleLike = async (tweetId, userId) => {
   }
 };
 
+//Da aggiungere il blocco al rt di ogni tuo post o gestire l'eliminazione del rt ad il tuo post
 const toggleRt = async (tweetId, userId) => {
-  console.log(tweetId, userId);
-  //Ottieni il riferimento al documento del tweet corrispondente
-
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
   //LOGIC TO NOT ALLOW RT OF YOUR OWN POST AND RT
@@ -631,8 +629,15 @@ const toggleRt = async (tweetId, userId) => {
     }
   });
 
+  console.log(uniqueTweet);
+
   let originalId = uniqueTweet.originalId;
   const loggedUserRt = auth.currentUser.uid;
+
+  if (uniqueTweet.userId === loggedUserRt) {
+    foundOwnRt = true;
+    console.log("non puoi rt un tuo stesso post");
+  }
 
   querySnapshotAll.forEach((doc) => {
     const userData = doc.data();
@@ -641,7 +646,8 @@ const toggleRt = async (tweetId, userId) => {
 
     if (tweet) {
       if (tweet.userId === loggedUserRt) {
-        console.log("non puoi retwittare un tuo stesso post/rt");
+        console.log(tweet);
+        console.log("non puoi retwittare un tuo rt");
         foundOwnRt = true;
       }
     }
@@ -944,6 +950,36 @@ const removeTweet = async (tweetId, userId) => {
   }
 };
 
+const editProfile = async (user, updateData) => {
+  console.log(user.position);
+  console.log(user.age);
+  console.log(user.gender);
+  console.log(user.bio);
+
+  const auth = getAuth();
+  const userID = auth.currentUser.uid;
+  const db = getFirestore();
+  const userDocRef = doc(db, "users", userID);
+  console.log(userDocRef);
+
+  // Ottieni il documento del tweet
+  const tweetDoc = await getDoc(userDocRef);
+
+  // Ottieni i dati del tweet dal documento
+  const userData = tweetDoc.data();
+
+  const updatedUserData = {
+    ...userData,
+    position: updateData.position,
+    age: updateData.age,
+    bio: updateData.bio,
+    gender: updateData.gender,
+  };
+
+  console.log(updatedUserData);
+  await updateDoc(userDocRef, updatedUserData);
+};
+
 export {
   createUserDocument,
   fetchUserProfileData,
@@ -958,5 +994,6 @@ export {
   toggleLike,
   toggleRt,
   removeTweet,
+  editProfile,
   auth,
 };

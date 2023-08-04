@@ -105,7 +105,7 @@ const Profiletweets = (props) => {
                     <p>{tweet.date}</p>
                     <p>{tweet.timestamp}</p>
                     <button
-                      onClick={() => handleToggleRt(tweet.key, tweet.userId)}
+                      onClick={() => handleRemoveTweet(tweet.key, tweet.userId)}
                     >
                       X
                     </button>
@@ -197,5 +197,4 @@ const Profiletweets = (props) => {
 
 export default Profiletweets;
 
-//creare elimina tweet da profileTweets
-//MACRO FEATURE: EDIT PROFILE / COMMENTI / FOTO E VIDEO
+//MACRO FEATURE: COMMENTI / FOTO E VIDEO

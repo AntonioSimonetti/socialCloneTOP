@@ -5,7 +5,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { fetchUserProfileData, fetchUserTweets } from "../firebaseUtils";
 import "../styles/profile.css";
 import Profiletweets from "./profiletweets";
-
+import Editprofile from "./editprofile";
 import postionsvg from "../img/map-point-wave.svg";
 import agesvg from "../img/calendar.svg";
 import gendersvg from "../img/gender.svg";
@@ -21,6 +21,11 @@ https://www.svgrepo.com/svg/526143/refresh
 function Profile() {
   const [user, setUser] = useState(null);
   const [tweets, setTweets] = useState([]);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  const toggleEditProfile = () => {
+    setIsEditingProfile((prevState) => !prevState);
+  };
 
   useEffect(() => {
     const auth = getAuth();
@@ -36,7 +41,7 @@ function Profile() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isEditingProfile]);
 
   return (
     <div className="profile">
@@ -46,7 +51,9 @@ function Profile() {
       <div className="topDiv">
         <div className="avatarDiv">
           <img src={user?.photoURL || defaultusersvg} alt="user avatar" />
-          <button className="edit-profile">Edit profile</button>
+          <button className="edit-profile" onClick={toggleEditProfile}>
+            Edit profile
+          </button>
         </div>
       </div>
       {user && (
@@ -55,9 +62,7 @@ function Profile() {
             <h1 className="name">{user.name}</h1>
             <p className="userid">Placeholder</p>
           </div>
-          <p className="bio">
-            Placeholder for bio, to decide maximum characters
-          </p>
+          <p className="bio">{user.bio}</p>
           <div className="infoDiv">
             <div className="positionDiv">
               <img src={postionsvg} alt="position icon" />
@@ -80,6 +85,9 @@ function Profile() {
           </div>
           <Profiletweets user={user} />
         </>
+      )}
+      {isEditingProfile && (
+        <Editprofile onClose={toggleEditProfile} onUser={user} />
       )}
     </div>
   );
