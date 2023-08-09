@@ -121,18 +121,18 @@ const Profiletweets = (props) => {
                       onClick={() => handleToggleLike(tweet.key, userId.uid)}
                     >
                       <img src={heartsvg} alt="likeicon" />
-                      <p>{tweet.likes}</p>
+                      <p>{String(tweet.likes)}</p>
                     </div>
                     <div
                       className="rtDiv"
                       onClick={() => handleToggleRt(tweet.key, tweet.userId)}
                     >
                       <img src={rtsvg} alt="rticon" />
-                      <p>{tweet.rt}</p>
+                      <p>{String(tweet.rt)}</p>
                     </div>
                     <div className="commentsDiv">
                       <img src={commentsvg} alt="commenticon" />
-                      <p>{tweet.comments}</p>
+                      <p>{String(tweet.comments.length)}</p>
                     </div>
                   </div>
                 </div>
@@ -164,18 +164,18 @@ const Profiletweets = (props) => {
                       onClick={() => handleToggleLike(tweet.key, tweet.userId)}
                     >
                       <img src={heartsvg} alt="likeicon" />
-                      <p>{tweet.likes}</p>
+                      <p>{String(tweet.likes)}</p>
                     </div>
                     <div
                       className="rtDiv"
                       onClick={() => handleToggleRt(tweet.key, tweet.userId)}
                     >
                       <img src={rtsvg} alt="rticon" />
-                      <p>{tweet.rt}</p>
+                      <p>{String(tweet.rt)}</p>
                     </div>
                     <div className="commentsDiv">
                       <img src={commentsvg} alt="commenticon" />
-                      <p>{tweet.comments}</p>
+                      <p>{String(tweet.comments.length)}</p>
                     </div>
                   </div>
                 </div>

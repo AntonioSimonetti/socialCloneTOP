@@ -5,9 +5,11 @@ import {
   exploreTweets,
   toggleLike,
   toggleRt,
+  addComment,
   auth,
 } from "../firebaseUtils";
 import "../styles/home.css";
+import Comment from "./comment";
 import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
@@ -22,6 +24,8 @@ function Homepage() {
   const [showExplore, setShowExplore] = useState(false);
   const [exploreData, setExploreData] = useState(null);
   const [user, setUser] = useState(null);
+
+  const [selectedTweetId, setSelectedTweetId] = useState(null);
 
   const handleToggleLike = async (tweetId, authorId) => {
     try {
@@ -48,6 +52,16 @@ function Homepage() {
     setShowExplore((prevShowExplore) => !prevShowExplore);
     setStartIndex(0);
     setEndIndex(5);
+  };
+
+  const handleComment = (tweetId) => {
+    console.log(tweetId.key);
+    setSelectedTweetId((prevSelectedTweetId) => {
+      // Verifica se il tweetId corrente è già presente nello stato
+      const isTweetSelected = prevSelectedTweetId === tweetId.key;
+
+      return isTweetSelected ? null : tweetId.key;
+    });
   };
 
   const handleLogout = async () => {
@@ -127,6 +141,14 @@ function Homepage() {
     setUser(utente);
   }, []);
 
+  useEffect(() => {
+    if (selectedTweetId) {
+      document.body.classList.add("comment-active");
+    } else {
+      document.body.classList.remove("comment-active");
+    }
+  }, [selectedTweetId]);
+
   return (
     <div className="homepage">
       <div className="headerDiv">
@@ -175,7 +197,10 @@ function Homepage() {
                         <img src={rtsvg} alt="rticon" />
                         <p>{tweet.rt}</p>
                       </div>
-                      <div className="commentsDiv">
+                      <div
+                        className="commentsDiv"
+                        onClick={() => handleComment(tweet, user)}
+                      >
                         <img src={commentsvg} alt="commenticon" />
                         <p>{tweet.comments}</p>
                       </div>
@@ -215,10 +240,19 @@ function Homepage() {
                         <img src={rtsvg} alt="rticon" />
                         <p>{tweet.rt}</p>
                       </div>
-                      <div className="commentsDiv">
+                      <div
+                        className="commentsDiv"
+                        onClick={() => handleComment(tweet, user)}
+                      >
                         <img src={commentsvg} alt="commenticon" />
-                        <p>{tweet.comments}</p>
+                        <p>{tweet.comments.length}</p>
                       </div>
+                      {selectedTweetId === tweet.key && (
+                        <Comment
+                          onAllTweet={tweet}
+                          setSelectedTweetId={setSelectedTweetId}
+                        />
+                      )}
                     </div>
                   </div>
                 );

@@ -1,0 +1,66 @@
+.topHeader {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  background-color: black;
+  width: 100%;
+  height: 1.5rem;
+}
+
+.comment {
+  /*position: relative;*/
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Sfondo nero trasparente */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content {
+  padding: 10px 10px;
+}
+
+.singleContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.topContent {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.closeBtn {
+  border: none;
+  color: white;
+  background-color: black;
+}
+
+.mainDiv {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background-color: white;
+  border: 2px black solid;
+  overflow: auto;
+  max-height: 400px;
+  width: 80vw;
+}
+
+.addComment {
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  padding: 10px;
+  border-top: 2px gray solid;
+}

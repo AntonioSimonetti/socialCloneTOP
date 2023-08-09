@@ -120,7 +120,7 @@ const addTweet = async (tweetContent) => {
     timestamp: time,
     likes: 0,
     rt: 0,
-    comments: 0,
+    comments: [],
     name: userName,
     likedBy: [],
     rtBy: [],
@@ -796,7 +796,7 @@ const toggleRt = async (tweetId, userId) => {
             likedBy: [],
             retweeted: true,
             likes: 0,
-            comments: 0,
+            comments: [],
             rt: 0,
             rtName: loggedUserName,
             originalId: targetedTweet.key,
@@ -871,7 +871,7 @@ const toggleRt = async (tweetId, userId) => {
           likedBy: [],
           retweeted: true,
           likes: 0,
-          comments: 0,
+          comments: [],
           rt: 0,
           rtName: loggedUserName,
           originalId: tweet.key,
@@ -958,6 +958,7 @@ const editProfile = async (user, updateData) => {
 
   const auth = getAuth();
   const userID = auth.currentUser.uid;
+
   const db = getFirestore();
   const userDocRef = doc(db, "users", userID);
   console.log(userDocRef);
@@ -980,6 +981,81 @@ const editProfile = async (user, updateData) => {
   await updateDoc(userDocRef, updatedUserData);
 };
 
+const addComment = async (tweet, newTweet) => {
+  console.log("tweet intero", tweet);
+
+  const userId = auth.currentUser.uid;
+  console.log(userId);
+
+  const db = getFirestore();
+  const userDocRef = doc(db, "usertweets", tweet.userId);
+
+  // Ottieni il documento del tweet
+  const tweetDoc = await getDoc(userDocRef);
+
+  // Ottieni i dati del tweet dal documento
+  const userData = tweetDoc.data();
+  const tweetData = userData.tweets;
+  console.log("tweetData, tutti i tweet", tweetData);
+  console.log(newTweet);
+
+  //search user's infos
+  const userNameDocRef = doc(db, "users", userId);
+  const userDoc = await getDoc(userNameDocRef);
+  const userInfo = userDoc.data();
+  console.log();
+
+  // Ottiene tutti i dati per data e tempo
+  const currentTime = new Date();
+  const date = currentTime.toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const time = currentTime.toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  // Cerca l'oggetto con la stessa key di tweet.key utilizzando forEach
+  tweetData.forEach((tweetItem) => {
+    if (tweetItem.key === tweet.key) {
+      // Hai trovato l'oggetto con la stessa key, aggiungi il nuovo tweet ai commenti
+
+      tweetItem.comments.push({
+        content: newTweet,
+        userId: userId,
+        name: userInfo.name,
+        date: date,
+        timestamp: time,
+      });
+      console.log("Oggetto trovato con il nuovo commento:", tweetItem);
+    }
+  });
+
+  // Aggiorna il documento nel database con la nuova modifica fatta
+  await updateDoc(userDocRef, { tweets: tweetData });
+};
+
+const fetchComments = async (onAllTweet) => {
+  const db = getFirestore();
+  const userDocRef = doc(db, "usertweets", onAllTweet.userId);
+  // Ottieni il documento del tweet
+  const tweetDoc = await getDoc(userDocRef);
+
+  // Ottieni i dati del tweet dal documento
+  const userData = tweetDoc.data();
+  const tweetData = userData.tweets;
+  console.log("tweetData", tweetData);
+  // Cerca il tweet corrispondente nella collezione di tweet
+  const selectedTweet = tweetData.find((tweet) => tweet.key === onAllTweet.key);
+
+  // Se il tweet corrisponde, restituisci i suoi commenti, altrimenti restituisci un array vuoto
+  return Object.values(selectedTweet.comments);
+};
+
 export {
   createUserDocument,
   fetchUserProfileData,
@@ -995,5 +1071,7 @@ export {
   toggleRt,
   removeTweet,
   editProfile,
+  addComment,
+  fetchComments,
   auth,
 };
