@@ -204,6 +204,12 @@ function Homepage() {
                         <img src={commentsvg} alt="commenticon" />
                         <p>{tweet.comments}</p>
                       </div>
+                      {selectedTweetId === tweet.key && (
+                        <Comment
+                          onAllTweet={tweet}
+                          setSelectedTweetId={setSelectedTweetId}
+                        />
+                      )}
                     </div>
                   </div>
                 );

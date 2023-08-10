@@ -6,6 +6,7 @@ import {
   removeTweet,
   auth,
 } from "../firebaseUtils";
+import Comment from "./comment";
 import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
@@ -17,6 +18,26 @@ const Profiletweets = (props) => {
   const [endIndex, setEndIndex] = useState(5);
   const { user } = props;
   const [userId, setUserId] = useState(null);
+
+  const [selectedTweetId, setSelectedTweetId] = useState(null);
+
+  useEffect(() => {
+    if (selectedTweetId) {
+      document.body.classList.add("comment-active");
+    } else {
+      document.body.classList.remove("comment-active");
+    }
+  }, [selectedTweetId]);
+
+  const handleComment = (tweetId) => {
+    console.log(tweetId.key);
+    setSelectedTweetId((prevSelectedTweetId) => {
+      // Verifica se il tweetId corrente è già presente nello stato
+      const isTweetSelected = prevSelectedTweetId === tweetId.key;
+
+      return isTweetSelected ? null : tweetId.key;
+    });
+  };
 
   useEffect(() => {
     fetchAllTweets();
@@ -130,10 +151,19 @@ const Profiletweets = (props) => {
                       <img src={rtsvg} alt="rticon" />
                       <p>{String(tweet.rt)}</p>
                     </div>
-                    <div className="commentsDiv">
+                    <div
+                      className="commentsDiv"
+                      onClick={() => handleComment(tweet, user)}
+                    >
                       <img src={commentsvg} alt="commenticon" />
                       <p>{String(tweet.comments.length)}</p>
                     </div>
+                    {selectedTweetId === tweet.key && (
+                      <Comment
+                        onAllTweet={tweet}
+                        setSelectedTweetId={setSelectedTweetId}
+                      />
+                    )}
                   </div>
                 </div>
               );
@@ -173,10 +203,19 @@ const Profiletweets = (props) => {
                       <img src={rtsvg} alt="rticon" />
                       <p>{String(tweet.rt)}</p>
                     </div>
-                    <div className="commentsDiv">
+                    <div
+                      className="commentsDiv"
+                      onClick={() => handleComment(tweet, user)}
+                    >
                       <img src={commentsvg} alt="commenticon" />
                       <p>{String(tweet.comments.length)}</p>
                     </div>
+                    {selectedTweetId === tweet.key && (
+                      <Comment
+                        onAllTweet={tweet}
+                        setSelectedTweetId={setSelectedTweetId}
+                      />
+                    )}
                   </div>
                 </div>
               );
@@ -196,5 +235,3 @@ const Profiletweets = (props) => {
 };
 
 export default Profiletweets;
-
-//MACRO FEATURE: COMMENTI / FOTO E VIDEO

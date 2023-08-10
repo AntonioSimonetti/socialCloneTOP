@@ -89,10 +89,35 @@ const signInWithGoogleAndCreateUser = async () => {
   }
 };
 
+//User data
+
+const fetchAllUserData = async () => {
+  const db = getFirestore();
+  console.log("ciao");
+  // Get the email value from local storage
+  const userEmail = localStorage.getItem("email");
+
+  // Fetch users collection data
+  const usersCollectionRef = collection(db, "users");
+  const usersQuerySnapshot = await getDocs(usersCollectionRef);
+
+  // Find the user with the matching email
+  let userData = null;
+
+  usersQuerySnapshot.forEach((userDoc) => {
+    const user = userDoc.data();
+    if (user.email === userEmail) {
+      userData = { ...user, userId: userDoc.id };
+    }
+  });
+
+  return userData;
+};
+
 //create tweet
 const addTweet = async (tweetContent) => {
-  const auth = getAuth();
-  const userId = auth.currentUser.uid;
+  const auth = await fetchAllUserData();
+  const userId = auth.userId;
 
   const db = getFirestore();
   const userTweetsDocRef = doc(db, "usertweets", userId);
@@ -148,8 +173,8 @@ const addTweet = async (tweetContent) => {
 };
 
 const fetchUserTweets = async (limit) => {
-  const auth = getAuth();
-  const userId = auth.currentUser.uid;
+  const auth = await fetchAllUserData();
+  const userId = auth.userId;
 
   const db = getFirestore();
   const userTweetsDocRef = doc(db, "usertweets", userId);
@@ -227,8 +252,8 @@ const fetchUserTweetsIn = async (documentName) => {
 };
 
 const followUser = async (userToFollow) => {
-  const auth = getAuth();
-  const loggedInUserId = auth.currentUser.uid;
+  const auth = await fetchAllUserData();
+  const loggedInUserId = auth.userId;
 
   try {
     const db = getFirestore();
@@ -300,8 +325,8 @@ const followUser = async (userToFollow) => {
 };
 
 const fetchFollowingUsersTweets = async () => {
-  const auth = getAuth();
-  const loggedInUserId = auth.currentUser.uid;
+  const auth = await fetchAllUserData();
+  const loggedInUserId = auth.userId;
 
   const db = getFirestore();
   const loggedInUserRef = doc(db, "users", loggedInUserId);
@@ -361,8 +386,9 @@ const exploreTweets = async (exploreData) => {
   if (exploreData === null) {
     try {
       const db = getFirestore();
-      const auth = getAuth();
-      const userId = auth.currentUser.uid;
+
+      const auth = await fetchAllUserData();
+      const userId = auth.userId;
 
       // Step 1: Fetch all tweets from "usertweets" collection
       const q = query(collection(db, "usertweets"));
@@ -411,8 +437,9 @@ const exploreTweets = async (exploreData) => {
     // Step 1: Fetch tweets from "usertweets" collection on the db using exploreData
     try {
       const db = getFirestore();
-      const auth = getAuth();
-      const userId = auth.currentUser.uid;
+
+      const auth = await fetchAllUserData();
+      const userId = auth.userId;
 
       const q = query(collection(db, "usertweets"));
       const querySnapshot = await getDocs(q);
@@ -453,7 +480,8 @@ const toggleLike = async (tweetId, userId) => {
 
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
-  const loggedUser = auth.currentUser.uid;
+  const auth = await fetchAllUserData();
+  const loggedUser = auth.userId;
 
   // Ottieni il documento del tweet
   const tweetDoc = await getDoc(userDocRef);
@@ -632,7 +660,9 @@ const toggleRt = async (tweetId, userId) => {
   console.log(uniqueTweet);
 
   let originalId = uniqueTweet.originalId;
-  const loggedUserRt = auth.currentUser.uid;
+
+  const auth = await fetchAllUserData();
+  const loggedUserRt = auth.userId;
 
   if (uniqueTweet.userId === loggedUserRt) {
     foundOwnRt = true;
@@ -660,7 +690,8 @@ const toggleRt = async (tweetId, userId) => {
   //END LOGIC TO NOT ALLOW RT OF YOUR OWN POST AND RT
 
   //utente che retweet
-  const loggedUser = auth.currentUser.uid;
+  const authTwo = await fetchAllUserData();
+  const loggedUser = authTwo.userId;
   const userDocRefName = doc(db, "users", loggedUser);
   const nameDocData = await getDoc(userDocRefName);
   const loggedUserData = nameDocData.data();
@@ -956,8 +987,8 @@ const editProfile = async (user, updateData) => {
   console.log(user.gender);
   console.log(user.bio);
 
-  const auth = getAuth();
-  const userID = auth.currentUser.uid;
+  const auth = await fetchAllUserData();
+  const userID = auth.userId;
 
   const db = getFirestore();
   const userDocRef = doc(db, "users", userID);
@@ -983,27 +1014,11 @@ const editProfile = async (user, updateData) => {
 
 const addComment = async (tweet, newTweet) => {
   console.log("tweet intero", tweet);
-
-  const userId = auth.currentUser.uid;
-  console.log(userId);
-
   const db = getFirestore();
-  const userDocRef = doc(db, "usertweets", tweet.userId);
 
-  // Ottieni il documento del tweet
-  const tweetDoc = await getDoc(userDocRef);
-
-  // Ottieni i dati del tweet dal documento
-  const userData = tweetDoc.data();
-  const tweetData = userData.tweets;
-  console.log("tweetData, tutti i tweet", tweetData);
-  console.log(newTweet);
-
-  //search user's infos
-  const userNameDocRef = doc(db, "users", userId);
-  const userDoc = await getDoc(userNameDocRef);
-  const userInfo = userDoc.data();
-  console.log();
+  const auth = await fetchAllUserData();
+  const userId = auth.userId;
+  console.log(userId);
 
   // Ottiene tutti i dati per data e tempo
   const currentTime = new Date();
@@ -1019,41 +1034,115 @@ const addComment = async (tweet, newTweet) => {
     second: "2-digit",
   });
 
-  // Cerca l'oggetto con la stessa key di tweet.key utilizzando forEach
-  tweetData.forEach((tweetItem) => {
-    if (tweetItem.key === tweet.key) {
-      // Hai trovato l'oggetto con la stessa key, aggiungi il nuovo tweet ai commenti
+  if (tweet.retweeted) {
+    const userCollectionRef = collection(db, "usertweets");
+    const usersQuerySnapshot = await getDocs(userCollectionRef);
+    let userDocIdFound = null;
+    const updatePromises = [];
 
-      tweetItem.comments.push({
-        content: newTweet,
-        userId: userId,
-        name: userInfo.name,
-        date: date,
-        timestamp: time,
-      });
-      console.log("Oggetto trovato con il nuovo commento:", tweetItem);
-    }
-  });
+    usersQuerySnapshot.forEach((userDoc) => {
+      const userData = userDoc.data();
+      const tweetData = userData.tweets;
+      const selectedTweetIndex = tweetData.findIndex(
+        (tweetItem) => tweetItem.key === tweet.key
+      );
 
-  // Aggiorna il documento nel database con la nuova modifica fatta
-  await updateDoc(userDocRef, { tweets: tweetData });
+      if (selectedTweetIndex !== -1) {
+        const selectedTweet = tweetData[selectedTweetIndex];
+
+        // Update selectedTweet.comments with push
+        selectedTweet.comments.push({
+          content: newTweet,
+          userId: userId,
+          name: "placeholder",
+          date: date,
+          timestamp: time,
+        });
+
+        // Replace the old selectedTweet with the updated one
+        tweetData[selectedTweetIndex] = selectedTweet;
+
+        userDocIdFound = userDoc.id;
+        console.log(selectedTweet);
+        console.log(tweetData);
+        console.log(userDocIdFound);
+        // Add the promise for updating the user's document to the array
+        updatePromises.push(
+          updateDoc(doc(db, "usertweets", userDoc.id), { tweets: tweetData })
+        );
+      } else {
+        console.log("ciao");
+      }
+    });
+  } else {
+    const userDocRef = doc(db, "usertweets", tweet.userId);
+    const tweetDoc = await getDoc(userDocRef);
+    const userData = tweetDoc.data();
+    const tweetData = userData.tweets;
+    console.log("tweetData, tutti i tweet", tweetData);
+    console.log(newTweet);
+
+    const userNameDocRef = doc(db, "users", userId);
+    const userDoc = await getDoc(userNameDocRef);
+    const userInfo = userDoc.data();
+    console.log(userInfo);
+
+    tweetData.forEach((tweetItem) => {
+      if (tweetItem.key === tweet.key) {
+        tweetItem.comments.push({
+          content: newTweet,
+          userId: userId,
+          name: userInfo.name,
+          date: date,
+          timestamp: time,
+        });
+        console.log("Oggetto trovato con il nuovo commento:", tweetItem);
+      }
+    });
+
+    await updateDoc(userDocRef, { tweets: tweetData });
+  }
 };
 
 const fetchComments = async (onAllTweet) => {
   const db = getFirestore();
-  const userDocRef = doc(db, "usertweets", onAllTweet.userId);
-  // Ottieni il documento del tweet
-  const tweetDoc = await getDoc(userDocRef);
+  console.log(onAllTweet);
 
-  // Ottieni i dati del tweet dal documento
-  const userData = tweetDoc.data();
-  const tweetData = userData.tweets;
-  console.log("tweetData", tweetData);
-  // Cerca il tweet corrispondente nella collezione di tweet
-  const selectedTweet = tweetData.find((tweet) => tweet.key === onAllTweet.key);
+  if (onAllTweet.retweeted) {
+    // If it's a retweet, find the original tweet across all user tweets
+    const usersCollection = collection(db, "usertweets");
+    const usersQuerySnapshot = await getDocs(usersCollection);
 
-  // Se il tweet corrisponde, restituisci i suoi commenti, altrimenti restituisci un array vuoto
-  return Object.values(selectedTweet.comments);
+    for (const userDoc of usersQuerySnapshot.docs) {
+      const userData = userDoc.data();
+      const tweetData = userData.tweets;
+      const selectedTweet = tweetData.find(
+        (tweet) => tweet.key === onAllTweet.key
+      );
+
+      if (selectedTweet) {
+        return Object.values(selectedTweet.comments);
+      }
+    }
+
+    // If the retweeted original tweet is not found, return an empty array
+    return [];
+  } else {
+    // If it's an original tweet, fetch comments as before
+    const userDocRef = doc(db, "usertweets", onAllTweet.userId);
+    const tweetDoc = await getDoc(userDocRef);
+    const userData = tweetDoc.data();
+    const tweetData = userData.tweets;
+    const selectedTweet = tweetData.find(
+      (tweet) => tweet.key === onAllTweet.key
+    );
+
+    if (selectedTweet) {
+      return Object.values(selectedTweet.comments);
+    } else {
+      return [];
+    }
+  }
 };
 
 export {
