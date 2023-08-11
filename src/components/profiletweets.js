@@ -38,7 +38,7 @@ const Profiletweets = (props) => {
       return isTweetSelected ? null : tweetId.key;
     });
   };
-
+  console.log("41");
   useEffect(() => {
     fetchAllTweets();
   }, []);

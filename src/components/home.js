@@ -202,7 +202,7 @@ function Homepage() {
                         onClick={() => handleComment(tweet, user)}
                       >
                         <img src={commentsvg} alt="commenticon" />
-                        <p>{tweet.comments}</p>
+                        <p>{tweet.comments.length}</p>
                       </div>
                       {selectedTweetId === tweet.key && (
                         <Comment

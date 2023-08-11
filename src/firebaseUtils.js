@@ -89,35 +89,9 @@ const signInWithGoogleAndCreateUser = async () => {
   }
 };
 
-//User data
-
-const fetchAllUserData = async () => {
-  const db = getFirestore();
-  console.log("ciao");
-  // Get the email value from local storage
-  const userEmail = localStorage.getItem("email");
-
-  // Fetch users collection data
-  const usersCollectionRef = collection(db, "users");
-  const usersQuerySnapshot = await getDocs(usersCollectionRef);
-
-  // Find the user with the matching email
-  let userData = null;
-
-  usersQuerySnapshot.forEach((userDoc) => {
-    const user = userDoc.data();
-    if (user.email === userEmail) {
-      userData = { ...user, userId: userDoc.id };
-    }
-  });
-
-  return userData;
-};
-
 //create tweet
 const addTweet = async (tweetContent) => {
-  const auth = await fetchAllUserData();
-  const userId = auth.userId;
+  const userId = auth.currentUser.uid;
 
   const db = getFirestore();
   const userTweetsDocRef = doc(db, "usertweets", userId);
@@ -173,8 +147,7 @@ const addTweet = async (tweetContent) => {
 };
 
 const fetchUserTweets = async (limit) => {
-  const auth = await fetchAllUserData();
-  const userId = auth.userId;
+  const userId = auth.currentUser.uid;
 
   const db = getFirestore();
   const userTweetsDocRef = doc(db, "usertweets", userId);
@@ -252,8 +225,7 @@ const fetchUserTweetsIn = async (documentName) => {
 };
 
 const followUser = async (userToFollow) => {
-  const auth = await fetchAllUserData();
-  const loggedInUserId = auth.userId;
+  const loggedInUserId = auth.currentUser.uid;
 
   try {
     const db = getFirestore();
@@ -325,8 +297,7 @@ const followUser = async (userToFollow) => {
 };
 
 const fetchFollowingUsersTweets = async () => {
-  const auth = await fetchAllUserData();
-  const loggedInUserId = auth.userId;
+  const loggedInUserId = auth.currentUser.uid;
 
   const db = getFirestore();
   const loggedInUserRef = doc(db, "users", loggedInUserId);
@@ -387,8 +358,7 @@ const exploreTweets = async (exploreData) => {
     try {
       const db = getFirestore();
 
-      const auth = await fetchAllUserData();
-      const userId = auth.userId;
+      const userId = auth.currentUser.uid;
 
       // Step 1: Fetch all tweets from "usertweets" collection
       const q = query(collection(db, "usertweets"));
@@ -438,8 +408,7 @@ const exploreTweets = async (exploreData) => {
     try {
       const db = getFirestore();
 
-      const auth = await fetchAllUserData();
-      const userId = auth.userId;
+      const userId = auth.currentUser.uid;
 
       const q = query(collection(db, "usertweets"));
       const querySnapshot = await getDocs(q);
@@ -480,8 +449,7 @@ const toggleLike = async (tweetId, userId) => {
 
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
-  const auth = await fetchAllUserData();
-  const loggedUser = auth.userId;
+  const loggedUser = auth.currentUser.uid;
 
   // Ottieni il documento del tweet
   const tweetDoc = await getDoc(userDocRef);
@@ -543,11 +511,6 @@ const toggleLike = async (tweetId, userId) => {
       const tweetsBefore = tweetData.slice(0, tweetIndex);
       const tweetsAfter = tweetData.slice(tweetIndex + 1);
       const updatedLikes = targetedTweet.likes - 1;
-
-      console.log("updatedLikedBy", updatedLikedBy);
-      console.log("bef", tweetsBefore);
-      console.log("targ", targetedTweet);
-      console.log("aft", tweetsAfter);
 
       const updatedTweets = [
         ...tweetsBefore,
@@ -661,8 +624,7 @@ const toggleRt = async (tweetId, userId) => {
 
   let originalId = uniqueTweet.originalId;
 
-  const auth = await fetchAllUserData();
-  const loggedUserRt = auth.userId;
+  const loggedUserRt = auth.currentUser.uid;
 
   if (uniqueTweet.userId === loggedUserRt) {
     foundOwnRt = true;
@@ -690,8 +652,7 @@ const toggleRt = async (tweetId, userId) => {
   //END LOGIC TO NOT ALLOW RT OF YOUR OWN POST AND RT
 
   //utente che retweet
-  const authTwo = await fetchAllUserData();
-  const loggedUser = authTwo.userId;
+  const loggedUser = auth.currentUser.uid;
   const userDocRefName = doc(db, "users", loggedUser);
   const nameDocData = await getDoc(userDocRefName);
   const loggedUserData = nameDocData.data();
@@ -916,9 +877,6 @@ const toggleRt = async (tweetId, userId) => {
 //function to remove tweets
 const removeTweet = async (tweetId, userId) => {
   // Ottieni il riferimento al documento del tweet corrispondente
-  console.log("eseguita");
-  console.log("tweetId", tweetId);
-  console.log("userId", userId);
 
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
@@ -982,13 +940,7 @@ const removeTweet = async (tweetId, userId) => {
 };
 
 const editProfile = async (user, updateData) => {
-  console.log(user.position);
-  console.log(user.age);
-  console.log(user.gender);
-  console.log(user.bio);
-
-  const auth = await fetchAllUserData();
-  const userID = auth.userId;
+  const userID = auth.currentUser.uid;
 
   const db = getFirestore();
   const userDocRef = doc(db, "users", userID);
@@ -1016,9 +968,11 @@ const addComment = async (tweet, newTweet) => {
   console.log("tweet intero", tweet);
   const db = getFirestore();
 
-  const auth = await fetchAllUserData();
-  const userId = auth.userId;
-  console.log(userId);
+  const userId = auth.currentUser.uid;
+  const userDocRef = doc(db, "users", userId);
+  const tweetDoc = await getDoc(userDocRef);
+  const userData = tweetDoc.data();
+  const tweetDataName = userData.name;
 
   // Ottiene tutti i dati per data e tempo
   const currentTime = new Date();
@@ -1054,7 +1008,7 @@ const addComment = async (tweet, newTweet) => {
         selectedTweet.comments.push({
           content: newTweet,
           userId: userId,
-          name: "placeholder",
+          name: tweetDataName,
           date: date,
           timestamp: time,
         });
@@ -1107,6 +1061,7 @@ const addComment = async (tweet, newTweet) => {
 const fetchComments = async (onAllTweet) => {
   const db = getFirestore();
   console.log(onAllTweet);
+  const comments = [];
 
   if (onAllTweet.retweeted) {
     // If it's a retweet, find the original tweet across all user tweets
