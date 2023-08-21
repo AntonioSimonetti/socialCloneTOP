@@ -18,7 +18,6 @@ const Profiletweets = (props) => {
   const [endIndex, setEndIndex] = useState(5);
   const { user } = props;
   const [userId, setUserId] = useState(null);
-
   const [selectedTweetId, setSelectedTweetId] = useState(null);
 
   useEffect(() => {
@@ -49,6 +48,7 @@ const Profiletweets = (props) => {
   }, [userId]);
 
   const fetchAllTweets = async () => {
+    console.log("avvio");
     const allTweets = await fetchUserTweets(); // Recupera tutti i tweet
     setTweets(allTweets.reverse()); // Inverte l'ordine dei tweet
     setLoading(false);

@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { fetchComments, addComment } from "../firebaseUtils";
+import {
+  fetchComments,
+  addComment,
+  removeComment,
+  auth,
+} from "../firebaseUtils";
 import "../styles/comment.css";
 
 function Comment({ onAllTweet, setSelectedTweetId }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+  const [loggedUser, setLoggedUser] = useState(null);
 
   useEffect(() => {
     console.log("comment renderizzato");
@@ -17,12 +23,21 @@ function Comment({ onAllTweet, setSelectedTweetId }) {
     fetchCommentsData();
   }, []);
 
+  useEffect(() => {
+    const userAuth = auth.currentUser.uid;
+    setLoggedUser(userAuth);
+  }, []);
+
+  useEffect(() => {
+    console.log(loggedUser);
+  }, [loggedUser]);
+
   const handleInputChange = (event) => {
     setNewComment(event.target.value);
     console.log("newCommentOnChange", newComment);
   };
 
-  // Funzione per gestire l'invio del nuovo commento!!
+  // Funzione per gestire l'invio del nuovo commento
   const handleSubmit = async () => {
     // Chiamata alla funzione addComment per inviare il nuovo commento al database
     console.log("newcommentinSubmit", newComment);
@@ -48,6 +63,11 @@ function Comment({ onAllTweet, setSelectedTweetId }) {
                 <p>-</p>
                 <p>{comment.date}</p>
                 <p>{comment.timestamp}</p>
+                {comment.userId === loggedUser && (
+                  <button onClick={() => removeComment(comment, onAllTweet)}>
+                    X
+                  </button>
+                )}{" "}
               </div>
               <p>{comment.content}</p>
             </div>
@@ -69,4 +89,4 @@ function Comment({ onAllTweet, setSelectedTweetId }) {
 
 export default Comment;
 
-//add comments to profile component and explore
+//add comments to search component

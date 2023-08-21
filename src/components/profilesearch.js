@@ -16,6 +16,7 @@ function ProfileSearch({ documentId, user }) {
         setTweets(userTweets.slice(-2));
       });
     }
+    console.log("42", user);
   }, [documentId]);
 
   return (

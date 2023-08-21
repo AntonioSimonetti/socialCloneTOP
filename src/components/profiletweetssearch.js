@@ -69,6 +69,7 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
           {displayedTweets.map((tweet) => {
             if (tweet.retweeted) {
               // Contenuto del retweet
+              console.log(tweet);
               return (
                 <div key={tweet.key} className="tweet">
                   <div className="topTweetDiv">
@@ -90,24 +91,26 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
                       onClick={() => handleToggleLike(tweet.key, tweet.userId)}
                     >
                       <img src={heartsvg} alt="likeicon" />
-                      <p>{tweet.likes}</p>
+                      <p>{String(tweet.likes)}</p>
                     </div>
                     <div
                       className="rtDiv"
                       onClick={() => handleToggleRt(tweet.key, tweet.userId)}
                     >
                       <img src={rtsvg} alt="rticon" />
-                      <p>{tweet.rt}</p>
+                      <p>{String(tweet.rt)}</p>
                     </div>
                     <div className="commentsDiv">
                       <img src={commentsvg} alt="commenticon" />
-                      <p>{tweet.comments}</p>
+                      <p>{String(tweet.comments.length)}</p>
                     </div>
                   </div>
                 </div>
               );
             } else {
               // Contenuto del tweet originale
+              console.log(tweet);
+
               return (
                 <div key={tweet.key} className="tweet">
                   <div className="topTweetDiv">
@@ -128,18 +131,18 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
                       onClick={() => handleToggleLike(tweet.key, tweet.userId)}
                     >
                       <img src={heartsvg} alt="likeicon" />
-                      <p>{tweet.likes}</p>
+                      <p>{String(tweet.like)}</p>
                     </div>
                     <div
                       className="rtDiv"
                       onClick={() => handleToggleRt(tweet.key, tweet.userId)}
                     >
                       <img src={rtsvg} alt="rticon" />
-                      <p>{tweet.rt}</p>
+                      <p>{String(tweet.rt)}</p>
                     </div>
                     <div className="commentsDiv">
                       <img src={commentsvg} alt="commenticon" />
-                      <p>{tweet.comments}</p>
+                      <p>{String(tweet.comments.length)}</p>
                     </div>
                   </div>
                 </div>
