@@ -22,7 +22,7 @@ function Comment({ onAllTweet, setSelectedTweetId }) {
     console.log("newCommentOnChange", newComment);
   };
 
-  // Funzione per gestire l'invio del nuovo commento
+  // Funzione per gestire l'invio del nuovo commento!!
   const handleSubmit = async () => {
     // Chiamata alla funzione addComment per inviare il nuovo commento al database
     console.log("newcommentinSubmit", newComment);
