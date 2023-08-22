@@ -974,6 +974,8 @@ const addComment = async (tweet, newTweet) => {
   const userData = tweetDoc.data();
   const tweetDataName = userData.name;
 
+  const commentKey = doc(collection(db, "usertweets", userId, "tweets")).id; // Genera una chiave unica
+
   // Ottiene tutti i dati per data e tempo
   const currentTime = new Date();
   const date = currentTime.toLocaleDateString("en-US", {
@@ -1011,6 +1013,7 @@ const addComment = async (tweet, newTweet) => {
           name: tweetDataName,
           date: date,
           timestamp: time,
+          key: commentKey,
         });
 
         // Replace the old selectedTweet with the updated one
@@ -1049,6 +1052,7 @@ const addComment = async (tweet, newTweet) => {
           name: userInfo.name,
           date: date,
           timestamp: time,
+          key: commentKey,
         });
         console.log("Oggetto trovato con il nuovo commento:", tweetItem);
       }
@@ -1100,6 +1104,34 @@ const fetchComments = async (onAllTweet) => {
   }
 };
 
+const removeComment = async (comment, onAllTweet) => {
+  console.log("partita");
+  const commentKey = comment.key;
+  const foundCollection = onAllTweet.userId;
+
+  const db = getFirestore();
+  const userDocRef = doc(db, "usertweets", foundCollection);
+  const tweetDoc = await getDoc(userDocRef);
+  const userData = tweetDoc.data();
+  const tweetData = userData.tweets;
+
+  const updatedTweetData = tweetData.map((tweet) => {
+    if (tweet.comments) {
+      const commentIndex = tweet.comments.findIndex(
+        (c) => c.key === commentKey
+      );
+      if (commentIndex !== -1) {
+        console.log("rimuovo");
+        tweet.comments.splice(commentIndex, 1); // Rimuovi il commento dall'array
+      }
+    }
+    return tweet;
+  });
+
+  // Aggiorna il documento nel database con il nuovo array di commenti
+  await updateDoc(userDocRef, { tweets: updatedTweetData });
+};
+
 export {
   createUserDocument,
   fetchUserProfileData,
@@ -1117,5 +1149,6 @@ export {
   editProfile,
   addComment,
   fetchComments,
+  removeComment,
   auth,
 };
