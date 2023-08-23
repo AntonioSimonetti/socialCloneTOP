@@ -3,12 +3,33 @@ import { fetchUserTweetsIn, toggleLike, toggleRt } from "../firebaseUtils";
 import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
+import Comment from "./comment";
 
 const ProfileTweetsSearch = ({ documentId, user }) => {
   const [tweets, setTweets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [startIndex, setStartIndex] = useState(0);
   const [endIndex, setEndIndex] = useState(5);
+
+  const [selectedTweetId, setSelectedTweetId] = useState(null);
+
+  useEffect(() => {
+    if (selectedTweetId) {
+      document.body.classList.add("comment-active");
+    } else {
+      document.body.classList.remove("comment-active");
+    }
+  }, [selectedTweetId]);
+
+  const handleComment = (tweetId) => {
+    console.log(tweetId.key);
+    setSelectedTweetId((prevSelectedTweetId) => {
+      // Verifica se il tweetId corrente è già presente nello stato
+      const isTweetSelected = prevSelectedTweetId === tweetId.key;
+
+      return isTweetSelected ? null : tweetId.key;
+    });
+  };
 
   useEffect(() => {
     fetchUserTweetsIn(documentId).then((userTweets) => {
@@ -101,9 +122,20 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
                       <p>{String(tweet.rt)}</p>
                     </div>
                     <div className="commentsDiv">
-                      <img src={commentsvg} alt="commenticon" />
+                      <img
+                        src={commentsvg}
+                        alt="commenticon"
+                        onClick={() => handleComment(tweet, user)}
+                      />
                       <p>{String(tweet.comments.length)}</p>
                     </div>
+
+                    {selectedTweetId === tweet.key && (
+                      <Comment
+                        onAllTweet={tweet}
+                        setSelectedTweetId={setSelectedTweetId}
+                      />
+                    )}
                   </div>
                 </div>
               );
@@ -140,10 +172,19 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
                       <img src={rtsvg} alt="rticon" />
                       <p>{String(tweet.rt)}</p>
                     </div>
-                    <div className="commentsDiv">
+                    <div
+                      className="commentsDiv"
+                      onClick={() => handleComment(tweet, user)}
+                    >
                       <img src={commentsvg} alt="commenticon" />
                       <p>{String(tweet.comments.length)}</p>
                     </div>
+                    {selectedTweetId === tweet.key && (
+                      <Comment
+                        onAllTweet={tweet}
+                        setSelectedTweetId={setSelectedTweetId}
+                      />
+                    )}
                   </div>
                 </div>
               );

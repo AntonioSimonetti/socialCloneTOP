@@ -3,12 +3,14 @@ import defaultusersvg from "../img/user-circle-svgrepo-com (1).svg";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { fetchUserProfileData, addTweet } from "../firebaseUtils";
 import "../styles/addtweet.css";
+import AddMedia from "./addMedia";
 
 function Addtweet() {
   const [user, setUser] = useState(null);
   const [tweetContent, setTweetContent] = useState("");
   const [characterCount, setCharacterCount] = useState(0);
   const MAX_CHARACTER_LIMIT = 155;
+  const [showAddMedia, setShowAddMedia] = useState(false); // New state
 
   useEffect(() => {
     const auth = getAuth();
@@ -65,11 +67,17 @@ function Addtweet() {
         </span>
       </div>
       <div className="buttons">
-        <button className="add-media-button">Add photo/video</button>
+        <button
+          className="add-media-button"
+          onClick={() => setShowAddMedia(true)}
+        >
+          Add photo/video
+        </button>
         <button className="publish-button" onClick={handlePublishClick}>
           Publish
         </button>
       </div>
+      {showAddMedia && <AddMedia onClose={() => setShowAddMedia(false)} />}
     </div>
   );
 }

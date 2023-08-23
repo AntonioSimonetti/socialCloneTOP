@@ -11,16 +11,8 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  // createUserWithEmailAndPassword,
-  // signInWithEmailAndPassword,
-  // signOut,
-  // sendPasswordResetEmail,
-} from "firebase/auth";
+import { getStorage } from "firebase/storage";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import "firebase/firestore";
 import { firebaseConfig } from "./firebase";
 
@@ -53,6 +45,8 @@ const createUserDocument = async (user) => {
   // not sure yet i will keep this
   return user.uid;
 };
+
+const storage = getStorage(app);
 
 const fetchUserProfileData = async (userId) => {
   const userRef = doc(db, "users", userId);
@@ -1150,5 +1144,6 @@ export {
   addComment,
   fetchComments,
   removeComment,
+  storage,
   auth,
 };
