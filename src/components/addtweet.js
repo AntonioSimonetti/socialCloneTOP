@@ -10,7 +10,19 @@ function Addtweet() {
   const [tweetContent, setTweetContent] = useState("");
   const [characterCount, setCharacterCount] = useState(0);
   const MAX_CHARACTER_LIMIT = 155;
-  const [showAddMedia, setShowAddMedia] = useState(false); // New state
+  const [showAddMedia, setShowAddMedia] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+
+  useEffect(() => {
+    // Questo verrà eseguito ogni volta che imageUrl cambia
+    if (imageUrl) {
+      console.log("Nuovo URL dell'immagine:", imageUrl);
+    }
+  }, [imageUrl]);
+
+  const handleImageUrlChange = (newImageUrl) => {
+    setImageUrl(newImageUrl);
+  };
 
   useEffect(() => {
     const auth = getAuth();
@@ -38,7 +50,7 @@ function Addtweet() {
 
   const handlePublishClick = () => {
     if (tweetContent.trim() !== "" && characterCount <= MAX_CHARACTER_LIMIT) {
-      addTweet(tweetContent);
+      addTweet(tweetContent, imageUrl);
       setTweetContent("");
     } else {
       return;
@@ -77,7 +89,12 @@ function Addtweet() {
           Publish
         </button>
       </div>
-      {showAddMedia && <AddMedia onClose={() => setShowAddMedia(false)} />}
+      {showAddMedia && (
+        <AddMedia
+          onClose={() => setShowAddMedia(false)}
+          onImageUrlChange={handleImageUrlChange}
+        />
+      )}
     </div>
   );
 }

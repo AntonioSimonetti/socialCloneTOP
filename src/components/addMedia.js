@@ -4,9 +4,8 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 } from "uuid";
 import "../styles/addmedia.css";
 
-function AddMedia({ onClose }) {
+function AddMedia({ onClose, onImageUrlChange }) {
   const [imageUpload, setImageUpload] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null);
 
   const uploadImage = () => {
     if (imageUpload == null) return;
@@ -18,17 +17,10 @@ function AddMedia({ onClose }) {
       alert("Image Uploaded");
 
       getDownloadURL(imageRef).then((url) => {
-        setImageUrl(url);
+        onImageUrlChange(url);
       });
     });
   };
-
-  useEffect(() => {
-    // Questo verrà eseguito ogni volta che imageUrl cambia
-    if (imageUrl) {
-      console.log("Nuovo URL dell'immagine:", imageUrl);
-    }
-  }, [imageUrl]);
 
   return (
     <div className="add-media">

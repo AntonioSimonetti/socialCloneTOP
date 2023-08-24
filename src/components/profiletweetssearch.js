@@ -10,7 +10,6 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
   const [loading, setLoading] = useState(true);
   const [startIndex, setStartIndex] = useState(0);
   const [endIndex, setEndIndex] = useState(5);
-
   const [selectedTweetId, setSelectedTweetId] = useState(null);
 
   useEffect(() => {

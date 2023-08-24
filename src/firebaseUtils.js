@@ -84,7 +84,7 @@ const signInWithGoogleAndCreateUser = async () => {
 };
 
 //create tweet
-const addTweet = async (tweetContent) => {
+const addTweet = async (tweetContent, imageUrl) => {
   const userId = auth.currentUser.uid;
 
   const db = getFirestore();
@@ -118,6 +118,7 @@ const addTweet = async (tweetContent) => {
     likedBy: [],
     rtBy: [],
     userId: userId,
+    imageUrl: imageUrl,
   };
 
   try {
@@ -164,6 +165,7 @@ const fetchUserTweets = async (limit) => {
         timestamp: tweetObj.timestamp,
         userId: tweetObj.userId,
         retweeted: tweetObj.retweeted,
+        imageUrl: tweetObj.imageUrl,
       }));
 
       return tweets;

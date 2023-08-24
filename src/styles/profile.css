@@ -224,6 +224,23 @@
   cursor: pointer;
 }
 
+.imageButton {
+  margin-top: 10px; /* Adjust as needed */
+  z-index: 9999;
+}
+
+.imageButton button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.imageButton button:hover {
+  background-color: #0056b3;
+}
+
 @media (max-width: 900px) {
   .avatarDiv img {
     width: 10%;

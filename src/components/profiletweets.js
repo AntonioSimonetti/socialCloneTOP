@@ -7,6 +7,7 @@ import {
   auth,
 } from "../firebaseUtils";
 import Comment from "./comment";
+import ShowImage from "./showimage";
 import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
@@ -19,6 +20,7 @@ const Profiletweets = (props) => {
   const { user } = props;
   const [userId, setUserId] = useState(null);
   const [selectedTweetId, setSelectedTweetId] = useState(null);
+  const [viewingImage, setViewingImage] = useState(false);
 
   useEffect(() => {
     if (selectedTweetId) {
@@ -37,7 +39,6 @@ const Profiletweets = (props) => {
       return isTweetSelected ? null : tweetId.key;
     });
   };
-  console.log("41");
   useEffect(() => {
     fetchAllTweets();
   }, []);
@@ -107,6 +108,11 @@ const Profiletweets = (props) => {
     }
   };
 
+  const handleViewImage = (tweet) => {
+    console.log("View Image button clicked for tweet:", tweet);
+    setViewingImage(true);
+  };
+
   return (
     <div className="componentButtonDiv">
       {loading ? (
@@ -165,6 +171,20 @@ const Profiletweets = (props) => {
                       />
                     )}
                   </div>
+                  {tweet.imageUrl && (
+                    <div className="imageButton">
+                      <button onClick={() => handleViewImage(tweet)}>
+                        View Image
+                      </button>
+
+                      {viewingImage && (
+                        <ShowImage
+                          onClose={() => setViewingImage(false)}
+                          tweet={tweet}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             } else {
@@ -217,6 +237,20 @@ const Profiletweets = (props) => {
                       />
                     )}
                   </div>
+                  {tweet.imageUrl && (
+                    <div className="imageButton">
+                      <button onClick={() => handleViewImage(tweet)}>
+                        View Image
+                      </button>
+
+                      {viewingImage && (
+                        <ShowImage
+                          onClose={() => setViewingImage(false)}
+                          tweet={tweet}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             }
