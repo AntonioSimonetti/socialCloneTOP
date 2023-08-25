@@ -4,6 +4,7 @@ import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
 import Comment from "./comment";
+import ShowImage from "./showimage";
 
 const ProfileTweetsSearch = ({ documentId, user }) => {
   const [tweets, setTweets] = useState([]);
@@ -11,6 +12,7 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
   const [startIndex, setStartIndex] = useState(0);
   const [endIndex, setEndIndex] = useState(5);
   const [selectedTweetId, setSelectedTweetId] = useState(null);
+  const [viewingImage, setViewingImage] = useState(false);
 
   useEffect(() => {
     if (selectedTweetId) {
@@ -80,6 +82,11 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
     }
   };
 
+  const handleViewImage = (tweet) => {
+    console.log("View Image button clicked for tweet:", tweet);
+    setViewingImage(true);
+  };
+
   return (
     <div className="componentButtonDiv">
       {loading ? (
@@ -136,6 +143,23 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
                       />
                     )}
                   </div>
+                  {tweet.imageUrl && (
+                    <div className="imageButton">
+                      <p
+                        onClick={() => handleViewImage(tweet)}
+                        className="fakeButton"
+                      >
+                        View Image
+                      </p>
+
+                      {viewingImage && (
+                        <ShowImage
+                          onClose={() => setViewingImage(false)}
+                          tweet={tweet}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             } else {
@@ -162,7 +186,7 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
                       onClick={() => handleToggleLike(tweet.key, tweet.userId)}
                     >
                       <img src={heartsvg} alt="likeicon" />
-                      <p>{String(tweet.like)}</p>
+                      <p>{String(tweet.likes)}</p>
                     </div>
                     <div
                       className="rtDiv"
@@ -185,6 +209,23 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
                       />
                     )}
                   </div>
+                  {tweet.imageUrl && (
+                    <div className="imageButton">
+                      <p
+                        onClick={() => handleViewImage(tweet)}
+                        className="fakeButton"
+                      >
+                        View Image
+                      </p>
+
+                      {viewingImage && (
+                        <ShowImage
+                          onClose={() => setViewingImage(false)}
+                          tweet={tweet}
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             }

@@ -173,9 +173,12 @@ const Profiletweets = (props) => {
                   </div>
                   {tweet.imageUrl && (
                     <div className="imageButton">
-                      <button onClick={() => handleViewImage(tweet)}>
+                      <p
+                        onClick={() => handleViewImage(tweet)}
+                        className="fakeButton"
+                      >
                         View Image
-                      </button>
+                      </p>
 
                       {viewingImage && (
                         <ShowImage
@@ -239,9 +242,12 @@ const Profiletweets = (props) => {
                   </div>
                   {tweet.imageUrl && (
                     <div className="imageButton">
-                      <button onClick={() => handleViewImage(tweet)}>
+                      <p
+                        onClick={() => handleViewImage(tweet)}
+                        className="fakeButton"
+                      >
                         View Image
-                      </button>
+                      </p>
 
                       {viewingImage && (
                         <ShowImage

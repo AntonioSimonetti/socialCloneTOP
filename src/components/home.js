@@ -10,6 +10,7 @@ import {
 } from "../firebaseUtils";
 import "../styles/home.css";
 import Comment from "./comment";
+import ShowImage from "./showimage";
 import heartsvg from "../img/heart-svgrepo-com.svg";
 import commentsvg from "../img/chat-round-svgrepo-com.svg";
 import rtsvg from "../img/refresh-svgrepo-com.svg";
@@ -24,8 +25,13 @@ function Homepage() {
   const [showExplore, setShowExplore] = useState(false);
   const [exploreData, setExploreData] = useState(null);
   const [user, setUser] = useState(null);
-
   const [selectedTweetId, setSelectedTweetId] = useState(null);
+  const [viewingImage, setViewingImage] = useState(false);
+
+  const handleViewImage = (tweet) => {
+    console.log("View Image button clicked for tweet:", tweet);
+    setViewingImage(true);
+  };
 
   const handleToggleLike = async (tweetId, authorId) => {
     try {
@@ -211,6 +217,23 @@ function Homepage() {
                         />
                       )}
                     </div>
+                    {tweet.imageUrl && (
+                      <div className="imageButton">
+                        <p
+                          onClick={() => handleViewImage(tweet)}
+                          className="fakeButton"
+                        >
+                          View Image
+                        </p>
+
+                        {viewingImage && (
+                          <ShowImage
+                            onClose={() => setViewingImage(false)}
+                            tweet={tweet}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               } else {
@@ -260,6 +283,23 @@ function Homepage() {
                         />
                       )}
                     </div>
+                    {tweet.imageUrl && (
+                      <div className="imageButton">
+                        <p
+                          onClick={() => handleViewImage(tweet)}
+                          className="fakeButton"
+                        >
+                          View Image
+                        </p>
+
+                        {viewingImage && (
+                          <ShowImage
+                            onClose={() => setViewingImage(false)}
+                            tweet={tweet}
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               }

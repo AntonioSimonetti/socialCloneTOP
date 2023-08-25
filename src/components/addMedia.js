@@ -6,9 +6,37 @@ import "../styles/addmedia.css";
 
 function AddMedia({ onClose, onImageUrlChange }) {
   const [imageUpload, setImageUpload] = useState(null);
+  const [fileError, setFileError] = useState(null);
 
   const uploadImage = () => {
-    if (imageUpload == null) return;
+    if (imageUpload === null) {
+      setFileError("Please select a file.");
+      return;
+    }
+
+    const allowedExtensions = [
+      "jpeg",
+      "jpg",
+      "png",
+      "mp4",
+      "gif",
+      "svg",
+      "pdf",
+      "jp2",
+      "webp",
+      "avi",
+      "mov",
+      "mp3",
+      "wav",
+    ];
+    const fileExtension = imageUpload.name.split(".").pop().toLowerCase();
+
+    if (!allowedExtensions.includes(fileExtension)) {
+      setFileError(
+        "Invalid file format. Please select a JPEG, PNG, or MP4 file."
+      );
+      return;
+    }
 
     let uniqueName = imageUpload.name + v4();
 
@@ -29,10 +57,13 @@ function AddMedia({ onClose, onImageUrlChange }) {
       </button>
       <input
         type="file"
+        accept=".jpeg, .jpg, .png, .mp4, .gif, .svg, .pdf, .jp2, .webp, .avi, .mov, .mp3, .wav"
         onChange={(event) => {
           setImageUpload(event.target.files[0]);
+          setFileError(null); // Reset error on file change
         }}
       />
+      {fileError && <p className="error-message">{fileError}</p>}
       <button onClick={uploadImage}>Upload</button>
     </div>
   );
