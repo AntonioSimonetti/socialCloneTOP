@@ -20,10 +20,29 @@ function Notification() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    console.log(notifications);
+  }, [notifications]);
+
   return (
     <div className="notificationDiv">
       {notifications.map((notification) => (
-        <p key={notification.id}>ci sono</p>
+        <div key={notification.id} className="notificationItem">
+          {notification.type === "like" ? (
+            <p className="likeNotification">
+              {notification.sender} liked your post.
+            </p>
+          ) : notification.type === "comment" ? (
+            <p className="commentNotification">
+              {" "}
+              {notification.sender} has commented your post.
+            </p>
+          ) : (
+            <p className="otherNotification">
+              {notification.sender} retweeted your post.
+            </p>
+          )}
+        </div>
       ))}
     </div>
   );

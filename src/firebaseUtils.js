@@ -319,6 +319,8 @@ const fetchFollowingUsersTweets = async () => {
       (user) => user.id
     );
 
+    console.log(followingUsersIds);
+
     // Query per ottenere i tweet degli utenti seguiti
     const querySnapshot = await getDocs(
       query(
@@ -327,10 +329,14 @@ const fetchFollowingUsersTweets = async () => {
       )
     );
 
+    const documentNames = querySnapshot.docs.map((doc) => doc.id);
+    console.log(documentNames);
+
     const tweetsArray = [];
 
     querySnapshot.forEach((doc) => {
       const userTweetsData = doc.data();
+      console.log(userTweetsData);
       tweetsArray.push(...userTweetsData.tweets);
     });
 
@@ -342,7 +348,23 @@ const fetchFollowingUsersTweets = async () => {
         return b.date.localeCompare(a.date);
       }
     });
-    return tweetsArray;
+
+    let newTweetArray = [];
+
+    // TRA QUESTI COMMENTI SCRIVI UN FILTRO SU TWEETSARRAY CHE CONTROLLA
+    tweetsArray.forEach((tweet) => {
+      if (tweet.retweeted === true) {
+        newTweetArray.push(tweet);
+      } else {
+        if (tweet.userId !== loggedInUserId) {
+          newTweetArray.push(tweet);
+        }
+      }
+    });
+
+    console.log(newTweetArray);
+
+    return newTweetArray;
   } catch (error) {
     console.error("Error fetching following users' tweets:", error);
     return [];
@@ -1190,7 +1212,14 @@ const fetchNotifications = async () => {
   const tweetData = userData.notifications;
   console.log(tweetData);
 
-  return tweetData;
+  // Filtra le notifiche escludendo quelle con lo stesso mittente dell'utente loggato
+  const filteredNotifications = tweetData.filter(
+    (notification) => notification.sender !== userId
+  );
+
+  console.log(filteredNotifications);
+
+  return filteredNotifications;
 };
 
 export {
