@@ -7,6 +7,7 @@ import {
   toggleRt,
   addComment,
   auth,
+  createNotifyCollection,
 } from "../firebaseUtils";
 import "../styles/home.css";
 import Comment from "./comment";
@@ -94,6 +95,10 @@ function Homepage() {
   useEffect(() => {
     fetchTweets();
   }, [showExplore]);
+
+  useEffect(() => {
+    createNotifyCollection();
+  }, []);
 
   const handleLoadMore = () => {
     if (endIndex < tweets.length) {
@@ -217,23 +222,25 @@ function Homepage() {
                         />
                       )}
                     </div>
-                    {tweet.imageUrl && (
-                      <div className="imageButton">
-                        <p
-                          onClick={() => handleViewImage(tweet)}
-                          className="fakeButton"
-                        >
-                          View Image
-                        </p>
+                    <div className="extra">
+                      {tweet.imageUrl && (
+                        <div className="imageButton">
+                          <p
+                            onClick={() => handleViewImage(tweet)}
+                            className="fakeButton"
+                          >
+                            View Image
+                          </p>
 
-                        {viewingImage && (
-                          <ShowImage
-                            onClose={() => setViewingImage(false)}
-                            tweet={tweet}
-                          />
-                        )}
-                      </div>
-                    )}
+                          {viewingImage && (
+                            <ShowImage
+                              onClose={() => setViewingImage(false)}
+                              tweet={tweet}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               } else {
@@ -283,23 +290,25 @@ function Homepage() {
                         />
                       )}
                     </div>
-                    {tweet.imageUrl && (
-                      <div className="imageButton">
-                        <p
-                          onClick={() => handleViewImage(tweet)}
-                          className="fakeButton"
-                        >
-                          View Image
-                        </p>
+                    <div className="extra">
+                      {tweet.imageUrl && (
+                        <div className="imageButton">
+                          <p
+                            onClick={() => handleViewImage(tweet)}
+                            className="fakeButton"
+                          >
+                            View Image
+                          </p>
 
-                        {viewingImage && (
-                          <ShowImage
-                            onClose={() => setViewingImage(false)}
-                            tweet={tweet}
-                          />
-                        )}
-                      </div>
-                    )}
+                          {viewingImage && (
+                            <ShowImage
+                              onClose={() => setViewingImage(false)}
+                              tweet={tweet}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               }

@@ -38,3 +38,7 @@
 .icon-container-center:hover img {
   filter: brightness(3);
 }
+
+.navbar.hidden {
+  display: none;
+}

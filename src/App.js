@@ -7,6 +7,7 @@ import Navbar from "./components/navbar";
 import Profile from "./components/profile";
 import Addtweet from "./components/addtweet";
 import UserSearch from "./components/usersearch";
+import Notification from "./components/notifications";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -37,6 +38,10 @@ function App() {
     setCurrentComponent("search");
   };
 
+  const handleNotificationsClick = () => {
+    setCurrentComponent("notifications");
+  };
+
   return (
     <div className="App">
       {user ? (
@@ -45,12 +50,14 @@ function App() {
           {currentComponent === "profile" && <Profile />}
           {currentComponent === "addtweet" && <Addtweet />}
           {currentComponent === "search" && <UserSearch />}
+          {currentComponent === "notifications" && <Notification />}
 
           <Navbar
             onProfileClick={handleProfileClick}
             onHomeClick={handleHomeClick}
             onAddTweetClick={handleAddTweetClick}
             onSearchClick={handleSearchClick}
+            onNotificationsClick={handleNotificationsClick}
           />
         </>
       ) : (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../styles/navbar.css";
 import homesvg from "../img/home-2-svgrepo-com.svg";
 import searchsvg from "../img/magnifying-glass-for-search-svgrepo-com.svg";
@@ -25,9 +25,38 @@ function Navbar({
   onHomeClick,
   onAddTweetClick,
   onProfileClick,
+  onNotificationsClick,
 }) {
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const navbarRef = useRef(null);
+
+  const handleScroll = () => {
+    const scrolledToBottom =
+      window.innerHeight + window.scrollY >= document.body.scrollHeight;
+    setIsAtBottom(scrolledToBottom);
+    console.log("isAtBottom:", scrolledToBottom);
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Aggiungi o rimuovi la classe "hidden" in base a isAtBottom
+    if (navbarRef.current) {
+      if (isAtBottom) {
+        navbarRef.current.classList.add("hidden");
+      } else {
+        navbarRef.current.classList.remove("hidden");
+      }
+    }
+  }, [isAtBottom]);
+
   return (
-    <div className="navbar">
+    <div className={`navbar ${isAtBottom ? "hidden" : ""}`} ref={navbarRef}>
       <div className="icon-container" onClick={onHomeClick}>
         <img src={homesvg} alt="homeicon" />
       </div>
@@ -38,7 +67,11 @@ function Navbar({
         <img src={createChatsvg} alt="icon" onClick={onAddTweetClick} />
       </div>
       <div className="icon-container">
-        <img src={notifyoffsvg} alt="notifyicon" />{" "}
+        <img
+          src={notifyoffsvg}
+          alt="notifyicon"
+          onClick={onNotificationsClick}
+        />{" "}
       </div>
       <div className="icon-container">
         <img src={profilesvg} alt="createicon" onClick={onProfileClick} />{" "}

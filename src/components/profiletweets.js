@@ -171,23 +171,25 @@ const Profiletweets = (props) => {
                       />
                     )}
                   </div>
-                  {tweet.imageUrl && (
-                    <div className="imageButton">
-                      <p
-                        onClick={() => handleViewImage(tweet)}
-                        className="fakeButton"
-                      >
-                        View Image
-                      </p>
+                  <div className="extra">
+                    {tweet.imageUrl && (
+                      <div className="imageButton">
+                        <p
+                          onClick={() => handleViewImage(tweet)}
+                          className="fakeButton"
+                        >
+                          View Image
+                        </p>
 
-                      {viewingImage && (
-                        <ShowImage
-                          onClose={() => setViewingImage(false)}
-                          tweet={tweet}
-                        />
-                      )}
-                    </div>
-                  )}
+                        {viewingImage && (
+                          <ShowImage
+                            onClose={() => setViewingImage(false)}
+                            tweet={tweet}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             } else {

@@ -460,8 +460,6 @@ const toggleLike = async (tweetId, userId) => {
   const tweetData = userData.tweets;
   const tweetIndex = tweetData.findIndex((tweet) => tweet.key === tweetId);
 
-  //questa funzione con i rt non funzionava perchè il db è compromesso, da rifare a mano
-
   if (tweetIndex === -1) {
     const userDocRef2 = collection(db, "usertweets");
     const querySnapshot = await getDocs(userDocRef2);
@@ -582,6 +580,8 @@ const toggleLike = async (tweetId, userId) => {
       ...tweetsAfter,
     ];
     console.log("updatedTweets plus 1", updatedTweets);
+
+    addNotification(userId, "like", tweetId);
 
     // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
     await updateDoc(userDocRef, { tweets: updatedTweets });
@@ -866,6 +866,8 @@ const toggleRt = async (tweetId, userId) => {
         },
       ],
     };
+    addNotification(userId, "retweet", tweetId);
+
     await updateDoc(userTweetsRef, updatedRetweetData);
   }
 };
@@ -961,7 +963,7 @@ const editProfile = async (user, updateData) => {
 };
 
 const addComment = async (tweet, newTweet) => {
-  console.log("tweet intero", tweet);
+  console.log("tweet intero", tweet, newTweet);
   const db = getFirestore();
 
   const userId = auth.currentUser.uid;
@@ -1026,6 +1028,7 @@ const addComment = async (tweet, newTweet) => {
       } else {
         console.log("ciao");
       }
+      addNotification(tweet.userId, "comment", tweet.key);
     });
   } else {
     const userDocRef = doc(db, "usertweets", tweet.userId);
@@ -1053,7 +1056,7 @@ const addComment = async (tweet, newTweet) => {
         console.log("Oggetto trovato con il nuovo commento:", tweetItem);
       }
     });
-
+    addNotification(tweet.userId, "comment", tweet.key);
     await updateDoc(userDocRef, { tweets: tweetData });
   }
 };
@@ -1128,6 +1131,68 @@ const removeComment = async (comment, onAllTweet) => {
   await updateDoc(userDocRef, { tweets: updatedTweetData });
 };
 
+const createNotifyCollection = async () => {
+  const db = getFirestore();
+  const userId = auth.currentUser.uid;
+  const userDocRef = doc(db, "notifications", userId);
+  const userDocSnapshot = await getDoc(userDocRef);
+
+  if (userDocSnapshot.exists()) {
+    console.log("Il documento esiste.");
+    return; // Non fare nulla, poiché il documento esiste già
+  } else {
+    console.log("Il documento non esiste.");
+    await setDoc(userDocRef, {}); // Crea un nuovo documento vuoto con l'ID dell'utente
+  }
+};
+
+const addNotification = async (recipientId, type, postId) => {
+  const userId = auth.currentUser.uid;
+
+  try {
+    const userNotificationDocRef = doc(db, "notifications", recipientId);
+
+    // Ottieni il documento delle notifiche dell'utente destinatario
+    const userNotificationDocSnapshot = await getDoc(userNotificationDocRef);
+
+    if (userNotificationDocSnapshot.exists()) {
+      // Il documento esiste, quindi aggiungi la nuova notifica
+      const newNotification = {
+        sender: userId,
+        type: type,
+        postID: postId,
+        timestamp: new Date(),
+        read: false,
+      };
+
+      const existingData = userNotificationDocSnapshot.data();
+      const notificationsArray = existingData.notifications || [];
+
+      notificationsArray.push(newNotification);
+
+      // Aggiorna il documento con l'array delle notifiche aggiornato
+      await updateDoc(userNotificationDocRef, {
+        notifications: notificationsArray,
+      });
+    }
+  } catch (error) {
+    console.error("Errore durante l'aggiunta della notifica:", error);
+  }
+};
+
+//fetch notifications
+
+const fetchNotifications = async () => {
+  const userId = auth.currentUser.uid;
+  const userNotificationDocRef = doc(db, "notifications", userId);
+  const tweetDoc = await getDoc(userNotificationDocRef);
+  const userData = tweetDoc.data();
+  const tweetData = userData.notifications;
+  console.log(tweetData);
+
+  return tweetData;
+};
+
 export {
   createUserDocument,
   fetchUserProfileData,
@@ -1146,6 +1211,9 @@ export {
   addComment,
   fetchComments,
   removeComment,
+  createNotifyCollection,
+  addNotification,
+  fetchNotifications,
   storage,
   auth,
 };

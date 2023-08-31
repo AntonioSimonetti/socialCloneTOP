@@ -7,6 +7,7 @@ import "../styles/addmedia.css";
 function AddMedia({ onClose, onImageUrlChange }) {
   const [imageUpload, setImageUpload] = useState(null);
   const [fileError, setFileError] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const uploadImage = () => {
     if (imageUpload === null) {
@@ -38,6 +39,8 @@ function AddMedia({ onClose, onImageUrlChange }) {
       return;
     }
 
+    setUploading(true); // Imposta lo stato di uploading a true
+
     let uniqueName = imageUpload.name + v4();
 
     const imageRef = ref(storage, `images/${uniqueName}`);
@@ -47,6 +50,8 @@ function AddMedia({ onClose, onImageUrlChange }) {
       getDownloadURL(imageRef).then((url) => {
         onImageUrlChange(url);
       });
+
+      setUploading(false); // Imposta lo stato di uploading a false
     });
   };
 
@@ -65,6 +70,7 @@ function AddMedia({ onClose, onImageUrlChange }) {
       />
       {fileError && <p className="error-message">{fileError}</p>}
       <button onClick={uploadImage}>Upload</button>
+      {uploading && <p>Uploading...</p>}
     </div>
   );
 }

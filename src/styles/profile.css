@@ -161,8 +161,15 @@
   border-left: none;
   border-right: none;
   height: auto;
-  font-size: 18px;
-  max-height: 120px;
+  font-size: 16px;
+  max-height: 180px;
+}
+
+.extra {
+  font-size: 12px;
+  position: relative;
+  bottom: 0px;
+  right: 0px;
 }
 
 .topTweetDiv {
