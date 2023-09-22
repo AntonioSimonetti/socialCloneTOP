@@ -6,12 +6,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 2px solid black;
   width: calc(90% - 40px);
   height: 10%;
-  background-color: wheat;
+  background-color: black;
   border-radius: 30px;
   padding: 0 20px;
+  border: 2px solid var(--colore-primario);
 }
 .icon-container,
 .icon-container-center {
@@ -23,14 +23,14 @@
 }
 
 .icon-container img {
-  width: 20%;
-  height: 20%;
+  width: 15%;
+  height: 15%;
   transition: filter 0.3s ease;
 }
 
 .icon-container-center img {
-  width: 30%;
-  height: 30%;
+  width: 25%;
+  height: 25%;
   transition: filter 0.3s ease;
 }
 
@@ -41,4 +41,69 @@
 
 .navbar.hidden {
   display: none;
+}
+
+.notification-lengthTwo {
+  color: var(--colore-primario);
+  font-size: 4rem;
+  padding: 1px;
+}
+
+.notification-lengthTwo.active {
+  animation: pulseSlowlyNav 4s infinite;
+}
+
+@keyframes pulseSlowlyNav {
+  0% {
+    filter: brightness(100%);
+    color: var(--colore-primario);
+  }
+  25% {
+    filter: brightness(200%);
+  }
+  50% {
+    filter: brightness(300%);
+    color: var(--colore-testo);
+  }
+  75% {
+    filter: brightness(200%);
+  }
+  100% {
+    filter: brightness(100%);
+    color: var(--colore-primario);
+  }
+}
+
+@media screen and (max-width: 320px) {
+  .notification-lengthTwo {
+    font-size: 12px !important;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .icon-container img {
+    width: 35%;
+    height: 35%;
+    transition: filter 0.3s ease;
+  }
+
+  .icon-container-center img {
+    width: 45%;
+    height: 45%;
+    transition: filter 0.3s ease;
+  }
+
+  .notification-lengthTwo {
+    color: var(--colore-primario);
+    font-size: 2rem;
+    padding: 1px;
+  }
+}
+
+@media screen and (min-width: 700px) and (max-width: 1499px) {
+  .notification-lengthTwo {
+    color: var(--colore-primario);
+    font-size: 2rem;
+    padding: 1px;
+  }
 }

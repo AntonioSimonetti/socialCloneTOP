@@ -1,0 +1,63 @@
+.notificationDiv {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  flex-direction: column;
+  max-height: auto;
+  gap: 0.2rem;
+  color: black;
+  margin-top: 1rem;
+}
+
+.notificationItem {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 10px;
+  border: 2px black solid;
+  animation: pulse 1s infinite alternate;
+  width: 30vw;
+  height: 5vh;
+  background-color: white;
+  border-radius: 8px;
+}
+
+.likeNotification,
+.commentNotification,
+.followerNotification,
+.otherNotification {
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 10px;
+}
+
+.noNotifyYet {
+  font-size: 2rem;
+  color: var(--colore-testo);
+}
+
+@keyframes pulse {
+  0% {
+    border-color: black;
+  }
+  100% {
+    border-color: var(--colore-primario);
+  }
+}
+
+@media screen and (max-width: 699px) {
+  .likeNotification,
+  .commentNotification,
+  .followerNotification,
+  .otherNotification {
+    font-size: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 10px;
+  }
+}

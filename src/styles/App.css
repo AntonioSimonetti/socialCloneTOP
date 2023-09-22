@@ -1,16 +1,28 @@
+@font-face {
+  font-family: "ndot";
+  src: url("../fonts/Ndot-55.otf") format("opentype");
+}
+
+:root {
+  --colore-primario: #a81117;
+  --colore-secondario: #171417;
+  --colore-testo: #ffffff;
+}
+
 body {
   padding: 0;
   margin: 0;
-
+  font-family: "ndot", sans-serif;
   height: 100vh;
-  background-color: aqua;
+  background-color: var(--colore-secondario);
   box-sizing: border-box;
+  color: var(--colore-testo);
 }
 
 html {
   padding: 0;
   margin: 0;
-  background-color: red;
+  background-color: var(--colore-secondario);
   box-sizing: border-box;
 }
 
@@ -18,4 +30,10 @@ html {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.landingDiv {
+  margin: 0;
+  padding: 0;
+  border: none;
 }

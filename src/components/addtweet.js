@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { fetchUserProfileData, addTweet } from "../firebaseUtils";
 import "../styles/addtweet.css";
 import AddMedia from "./addMedia";
+import { getFirestore, collection, doc, getDoc } from "firebase/firestore";
 
 function Addtweet() {
   const [user, setUser] = useState(null);
@@ -12,13 +13,44 @@ function Addtweet() {
   const MAX_CHARACTER_LIMIT = 155;
   const [showAddMedia, setShowAddMedia] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
 
   useEffect(() => {
-    // Questo verrà eseguito ogni volta che imageUrl cambia
-    if (imageUrl) {
-      console.log("Nuovo URL dell'immagine:", imageUrl);
-    }
-  }, [imageUrl]);
+    const fetchProfileImage = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (user) {
+        const db = getFirestore();
+
+        // Crea un riferimento al documento dell'utente nella collezione "profileImage"
+        const profileImageRef = doc(db, "profileImage", user.uid);
+
+        try {
+          const profileImageDoc = await getDoc(profileImageRef);
+
+          if (profileImageDoc.exists()) {
+            // Il documento esiste, quindi ottieni il link dell'immagine
+            const profileImageData = profileImageDoc.data();
+            const imageUrl = profileImageData.imageUrl;
+
+            // Imposta lo stato con il link dell'immagine
+            setProfileImageUrl(imageUrl);
+          } else {
+            //Il documento dell'immagine del profilo non esiste.
+          }
+        } catch (error) {
+          console.error(
+            "Errore nel recupero dell'immagine del profilo:",
+            error
+          );
+        }
+      }
+    };
+
+    // Chiama la funzione per ottenere il link dell'immagine del profilo
+    fetchProfileImage();
+  }, []);
 
   const handleImageUrlChange = (newImageUrl) => {
     setImageUrl(newImageUrl);
@@ -61,11 +93,14 @@ function Addtweet() {
     <div className="add-tweet">
       <div className="input-field">
         <div className="avatar">
-          <img src={user?.photoURL || defaultusersvg} alt="user avatar" />
+          <img
+            src={profileImageUrl || user?.photoURL || defaultusersvg}
+            alt="user avatar"
+          />
         </div>
         <textarea
           type="text"
-          placeholder="Scrivi il tuo tweet"
+          placeholder="Write a tweet"
           value={tweetContent}
           onChange={handleTweetContentChange}
           className={characterCount > MAX_CHARACTER_LIMIT ? "error" : ""}

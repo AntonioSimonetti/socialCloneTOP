@@ -21,12 +21,24 @@ function LandingPage() {
     setShowLoginMenu(true); // Mostra il componente LoginMenu
   };
 
+  const handleAppleSignInClick = () => {
+    const appleSignInButton = document.querySelector(".appleSignIn");
+
+    // Aggiungi la classe CSS per la vibrazione
+    appleSignInButton.classList.add("vibrate");
+
+    // Rimuovi la classe CSS dopo 2 secondi
+    setTimeout(() => {
+      appleSignInButton.classList.remove("vibrate");
+    }, 2000);
+  };
+
   return (
     <div className="landingMainDiv">
       {!showLoginMenu && !showRegistrationForm && (
         <>
-          <h1>Logo</h1>
-          <h1>Join us!</h1>
+          <h1 className="logo">PULSE</h1>
+          <h1 className="call">Join us!</h1>
         </>
       )}
       {!showRegistrationForm && !showLoginMenu && (
@@ -42,7 +54,7 @@ function LandingPage() {
             />
             <p className="textSingIn">Sign in with Google</p>
           </button>
-          <button className="appleSignIn">
+          <button className="appleSignIn" onClick={handleAppleSignInClick}>
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/3/31/Apple_logo_white.svg"
               alt="Apple Logo"

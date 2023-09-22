@@ -11,10 +11,11 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import "firebase/firestore";
 import { firebaseConfig } from "./firebase";
+import { v4 as uuidv4 } from "uuid";
 
 // Inizializza Firebase
 const app = initializeApp(firebaseConfig);
@@ -39,6 +40,7 @@ const createUserDocument = async (user) => {
     interest: null,
     following: 0,
     followers: 0,
+    userId: user.uid,
   };
   await setDoc(usersCollectionRef, userData);
 
@@ -75,9 +77,11 @@ const signInWithGoogleAndCreateUser = async () => {
       email: result.user.email,
       position: null,
       age: null,
+      photoURL: result.user.photoURL,
     };
     await createUserDocument(user);
-    // Resto del codice da eseguire dopo aver salvato l'utente nel databas
+
+    console.log("Utente creato con successo:", user);
   } catch (error) {
     console.log("Errore durante l'accesso con Google:", error);
   }
@@ -128,14 +132,10 @@ const addTweet = async (tweetContent, imageUrl) => {
       await updateDoc(userTweetsDocRef, {
         tweets: [...userTweetsDocSnapshot.data().tweets, tweetData],
       });
-      console.log("Tweet added to existing document.");
     } else {
       await setDoc(userTweetsDocRef, { tweets: [tweetData] });
-      console.log("New document created with the tweet.");
     }
-
     // Log, to be removed
-    console.log("Tweet added successfully.");
   } catch (error) {
     console.error("Error adding tweet: ", error);
   }
@@ -143,7 +143,6 @@ const addTweet = async (tweetContent, imageUrl) => {
 
 const fetchUserTweets = async (limit) => {
   const userId = auth.currentUser.uid;
-
   const db = getFirestore();
   const userTweetsDocRef = doc(db, "usertweets", userId);
 
@@ -182,8 +181,25 @@ const fetchUserSearch = async (searchText) => {
   const usersCollectionRef = collection(db, "users");
 
   try {
+    let queryText = searchText;
+
+    if (searchText.charAt(0) === "@") {
+      // If it starts with "@", remove "@" for the query
+      queryText = searchText.substring(1);
+
+      const querySnapshot = await getDocs(
+        query(usersCollectionRef, where("userId", ">=", queryText))
+      );
+
+      const searchResults = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      return searchResults;
+    }
+
     const querySnapshot = await getDocs(
-      query(usersCollectionRef, where("name", ">=", searchText))
+      query(usersCollectionRef, where("name", ">=", queryText))
     );
 
     const searchResults = querySnapshot.docs.map((doc) => ({
@@ -223,6 +239,10 @@ const fetchUserTweetsIn = async (documentName) => {
 const followUser = async (userToFollow) => {
   const loggedInUserId = auth.currentUser.uid;
 
+  if (userToFollow.id === loggedInUserId) {
+    return console.log("you cant follow yourself!");
+  }
+
   try {
     const db = getFirestore();
 
@@ -243,7 +263,7 @@ const followUser = async (userToFollow) => {
         ],
         followers: (userToFollowData.followers || 0) + 1,
       });
-      console.log("User added to followerArray.");
+      addNotification(userToFollow.id, "follower", userToFollow);
     } else {
       // Rimuovi l'utente che segue dall'array followerArray
       const updatedFollowerArray = userToFollowData.followerArray.filter(
@@ -254,7 +274,6 @@ const followUser = async (userToFollow) => {
         followers:
           userToFollowData.followers > 0 ? userToFollowData.followers - 1 : 0,
       });
-      console.log("User removed from followerArray.");
     }
 
     // Ora possiamo eseguire le stesse operazioni sull'utente loggato come abbiamo fatto prima
@@ -278,14 +297,12 @@ const followUser = async (userToFollow) => {
         following:
           loggedInUserData.following > 0 ? loggedInUserData.following - 1 : 0,
       });
-      console.log("User removed from whoFollowing array.");
     } else {
       // Aggiungi l'utente da seguire all'array
       await updateDoc(loggedInUserRef, {
         whoFollowing: [...(loggedInUserData.whoFollowing || []), userToFollow],
         following: (loggedInUserData.following || 0) + 1,
       });
-      console.log("User added to whoFollowing array.");
     }
   } catch (error) {
     console.error("Error following user: ", error);
@@ -293,8 +310,10 @@ const followUser = async (userToFollow) => {
 };
 
 const fetchFollowingUsersTweets = async () => {
+  //Get logged user's id
   const loggedInUserId = auth.currentUser.uid;
 
+  //Get the list of the users that logged user is following
   const db = getFirestore();
   const loggedInUserRef = doc(db, "users", loggedInUserId);
   const loggedInUserSnapshot = await getDoc(loggedInUserRef);
@@ -306,22 +325,21 @@ const fetchFollowingUsersTweets = async () => {
 
   const loggedInUserData = loggedInUserSnapshot.data();
 
+  //Check if the user is following someone
   if (
     !loggedInUserData.whoFollowing ||
     loggedInUserData.whoFollowing.length === 0
   ) {
-    console.log("User is not following anyone.");
     return [];
   }
 
   try {
+    //get the list of ids
     const followingUsersIds = loggedInUserData.whoFollowing.map(
       (user) => user.id
     );
 
-    console.log(followingUsersIds);
-
-    // Query per ottenere i tweet degli utenti seguiti
+    //Get the snapshot of each user that the id is inside followingUsersIds
     const querySnapshot = await getDocs(
       query(
         collection(db, "usertweets"),
@@ -329,18 +347,15 @@ const fetchFollowingUsersTweets = async () => {
       )
     );
 
-    const documentNames = querySnapshot.docs.map((doc) => doc.id);
-    console.log(documentNames);
-
     const tweetsArray = [];
 
+    //Iterate over the snapshots and for each one the tweets data get extract and pushed inside the tweetsArray
     querySnapshot.forEach((doc) => {
       const userTweetsData = doc.data();
-      console.log(userTweetsData);
       tweetsArray.push(...userTweetsData.tweets);
     });
 
-    // Ordiniamo i tweet per data e, in caso di stessa data, per timestamp (in ordine decrescente)
+    //Reorder the tweets with the most recent one on the top
     tweetsArray.sort((a, b) => {
       if (a.date === b.date) {
         return b.timestamp.localeCompare(a.timestamp);
@@ -351,18 +366,15 @@ const fetchFollowingUsersTweets = async () => {
 
     let newTweetArray = [];
 
-    // TRA QUESTI COMMENTI SCRIVI UN FILTRO SU TWEETSARRAY CHE CONTROLLA
     tweetsArray.forEach((tweet) => {
-      if (tweet.retweeted === true) {
+      if (
+        tweet.retweeted ||
+        tweet.rtId !== loggedInUserId ||
+        tweet.userId !== loggedInUserId
+      ) {
         newTweetArray.push(tweet);
-      } else {
-        if (tweet.userId !== loggedInUserId) {
-          newTweetArray.push(tweet);
-        }
       }
     });
-
-    console.log(newTweetArray);
 
     return newTweetArray;
   } catch (error) {
@@ -447,9 +459,6 @@ const exploreTweets = async (exploreData) => {
         tweetsMapping[tweet.key] = tweet;
       });
 
-      //Replace each element in 'exploreData' with the corresponding tweet
-      //from the 'tweetsMapping' to maintain the existing rendering order
-      //but thanks to the fetching from the db with the interactions upgraded to the latest and in realtime
       const filteredTweets = exploreData.map((element) => {
         return tweetsMapping[element.key];
       });
@@ -462,9 +471,6 @@ const exploreTweets = async (exploreData) => {
 
 const toggleLike = async (tweetId, userId) => {
   // Ottieni il riferimento al documento del tweet corrispondente
-  console.log("tweetkey", tweetId);
-  console.log("user.uid", userId);
-
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
   const loggedUser = auth.currentUser.uid;
@@ -473,7 +479,6 @@ const toggleLike = async (tweetId, userId) => {
   const tweetDoc = await getDoc(userDocRef);
 
   if (!tweetDoc.exists()) {
-    console.log("Tweet non trovato1!");
     return;
   }
 
@@ -494,9 +499,7 @@ const toggleLike = async (tweetId, userId) => {
       // Ogni "doc" rappresenta un documento nella collezione "usertweets"
       const userData = doc.data();
       const tweetData = userData.tweets;
-      console.log("tweetData", tweetData);
       const tweet = tweetData.find((tweet) => tweet.key === tweetId);
-      console.log("tweet", tweet);
 
       if (tweet) {
         targetedTweet = tweet;
@@ -507,19 +510,11 @@ const toggleLike = async (tweetId, userId) => {
 
     const tweetIndex = arrayTweet.findIndex((tweet) => tweet.key === tweetId);
 
-    console.log(targetedTweet);
-    console.log(documentId);
-
     let arrayToModify = arrayTweet;
     const isLiked = targetedTweet.likedBy.includes(loggedUser);
-    console.log(isLiked);
     const recipientUserDocRef = doc(db, "usertweets", documentId);
-    console.log("targetedTweet", targetedTweet);
-    console.log("arraytomodify", arrayToModify);
 
     if (isLiked) {
-      console.log("Il like è già presente. Rimuovendo il like...");
-
       const updatedLikedBy = targetedTweet.likedBy.filter(
         (id) => id !== loggedUser
       );
@@ -530,42 +525,44 @@ const toggleLike = async (tweetId, userId) => {
 
       const updatedTweets = [
         ...tweetsBefore,
-        { ...targetedTweet, likedBy: updatedLikedBy, likes: updatedLikes },
+        {
+          ...targetedTweet,
+          likedBy: updatedLikedBy,
+          likes: updatedLikes,
+          isActive: false,
+        },
         ...tweetsAfter,
       ];
-      console.log("updatedTweets con like rimosso al rt", updatedTweets);
 
       // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
       await updateDoc(recipientUserDocRef, { tweets: updatedTweets });
     } else {
-      console.log("Il like non è presente. Aggiungendo il like...");
       const updatedLikedBy = [...targetedTweet.likedBy, loggedUser];
       const tweetsBefore = arrayToModify.slice(0, tweetIndex);
       const tweetsAfter = arrayToModify.slice(tweetIndex + 1);
       const updatedLikes = targetedTweet.likes + 1;
 
-      console.log("aggiungo", tweetsBefore, tweetsAfter, updatedLikes);
-
       const updatedTweets = [
         ...tweetsBefore,
-        { ...targetedTweet, likedBy: updatedLikedBy, likes: updatedLikes },
+        {
+          ...targetedTweet,
+          likedBy: updatedLikedBy,
+          likes: updatedLikes,
+          isActive: true,
+        },
         ...tweetsAfter,
       ];
-      console.log("updatedTweets con like aggiunto al rt", updatedTweets);
 
       // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
       await updateDoc(recipientUserDocRef, { tweets: updatedTweets });
     }
-    console.log("fine toggle like di un rt");
   }
 
   const tweet = tweetData[tweetIndex];
   const isLiked = tweet.likedBy.includes(loggedUser);
-  console.log(tweet);
 
   // Aggiungi o rimuovi l'userId dall'array likedby
   if (isLiked) {
-    console.log(isLiked);
     const updatedLikedBy = tweet.likedBy.filter((id) => id !== loggedUser);
     const tweetsBefore = tweetData.slice(0, tweetIndex);
     const tweetsAfter = tweetData.slice(tweetIndex + 1);
@@ -574,17 +571,19 @@ const toggleLike = async (tweetId, userId) => {
     // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato e gli oggetti tweet successivi
     const updatedTweets = [
       ...tweetsBefore,
-      { ...tweet, likedBy: updatedLikedBy, likes: updatedLikes },
+      {
+        ...tweet,
+        likedBy: updatedLikedBy,
+        likes: updatedLikes,
+        isActive: false,
+      },
       ...tweetsAfter,
     ];
-
-    console.log("updatedTweets minus 1", updatedTweets);
 
     // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
     await updateDoc(userDocRef, { tweets: updatedTweets });
   } else {
     const updatedLikedBy = [...tweet.likedBy, loggedUser];
-    console.log(updatedLikedBy);
 
     // Creare una copia degli oggetti tweet precedenti l'oggetto specifico
     const tweetsBefore = tweetData.slice(0, tweetIndex);
@@ -598,10 +597,14 @@ const toggleLike = async (tweetId, userId) => {
     // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato con il valore likes aggiornato e gli oggetti tweet successivi
     const updatedTweets = [
       ...tweetsBefore,
-      { ...tweet, likedBy: updatedLikedBy, likes: updatedLikes },
+      {
+        ...tweet,
+        likedBy: updatedLikedBy,
+        likes: updatedLikes,
+        isActive: true,
+      },
       ...tweetsAfter,
     ];
-    console.log("updatedTweets plus 1", updatedTweets);
 
     addNotification(userId, "like", tweetId);
 
@@ -614,7 +617,6 @@ const toggleLike = async (tweetId, userId) => {
 const toggleRt = async (tweetId, userId) => {
   const db = getFirestore();
   const userDocRef = doc(db, "usertweets", userId);
-  //LOGIC TO NOT ALLOW RT OF YOUR OWN POST AND RT
   //da aggiungere classe o pseudo classe per dare feedback all user
   //user che fa il post può retwittare il post tutte le volte che vuole
   //crea quindi altri rt ma il numero di rt a quel post non aumenta
@@ -638,8 +640,6 @@ const toggleRt = async (tweetId, userId) => {
     }
   });
 
-  console.log(uniqueTweet);
-
   let originalId = uniqueTweet.originalId;
 
   const loggedUserRt = auth.currentUser.uid;
@@ -656,7 +656,6 @@ const toggleRt = async (tweetId, userId) => {
 
     if (tweet) {
       if (tweet.userId === loggedUserRt) {
-        console.log(tweet);
         console.log("non puoi retwittare un tuo rt");
         foundOwnRt = true;
       }
@@ -666,10 +665,11 @@ const toggleRt = async (tweetId, userId) => {
   if (foundOwnRt || uniqueTweet.deleted) {
     return; // Esce completamente dalla funzione
   }
-  console.log("questo non lo vedi");
+
   //END LOGIC TO NOT ALLOW RT OF YOUR OWN POST AND RT
 
   //utente che retweet
+
   const loggedUser = auth.currentUser.uid;
   const userDocRefName = doc(db, "users", loggedUser);
   const nameDocData = await getDoc(userDocRefName);
@@ -685,7 +685,6 @@ const toggleRt = async (tweetId, userId) => {
   const tweetDoc = await getDoc(userDocRef);
 
   if (!tweetDoc.exists()) {
-    console.log("Tweet non trovato!");
     return;
   }
 
@@ -695,7 +694,6 @@ const toggleRt = async (tweetId, userId) => {
   const tweetIndex = tweetData.findIndex((tweet) => tweet.key === tweetId);
 
   if (tweetIndex === -1) {
-    console.log("index -1");
     const userDocRefAll = collection(db, "usertweets");
     const querySnapshot = await getDocs(userDocRefAll);
 
@@ -720,7 +718,6 @@ const toggleRt = async (tweetId, userId) => {
     const isRt = targetedTweet.rtBy
       ? targetedTweet.rtBy.includes(loggedUser)
       : false;
-    console.log(isRt);
     if (isRt) {
       let targetedTweetTwo;
       let documentIdTwo;
@@ -737,38 +734,33 @@ const toggleRt = async (tweetId, userId) => {
 
         if (tweet) {
           targetedTweetTwo = tweet;
-          console.log(targetedTweetTwo);
           documentIdTwo = doc.id;
           arrayTweetTwo.push(...tweetData);
           retweetIndexTwo = arrayTweetTwo.indexOf(targetedTweetTwo);
-          console.log(retweetIndexTwo, "ciao");
         }
       });
 
       const recipientUserDocRefTwo = doc(db, "usertweets", documentIdTwo);
-      console.log("targetedTweetTwo", targetedTweetTwo);
-      console.log(arrayTweetTwo);
 
       //logica per rimuovere
       const updatedRtByTwo = targetedTweetTwo.rtBy.filter(
         (id) => id !== loggedUser
       );
       const tweetsBeforeTwo = arrayTweetTwo.slice(0, retweetIndexTwo);
-      console.log("TweetsBeforeTwo", tweetsBeforeTwo);
       const tweetsAfterTwo = arrayTweetTwo.slice(retweetIndexTwo + 1);
-      console.log("TweetsAfterTwo", tweetsAfterTwo);
-      console.log("retweetIndexTwo", retweetIndexTwo);
 
       const updatedRtTwo = targetedTweetTwo.rt - 1;
 
       // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato e gli oggetti tweet successivi
       const updatedTweets = [
         ...tweetsBeforeTwo,
-        { ...targetedTweetTwo, rtBy: updatedRtByTwo, rt: updatedRtTwo },
+        {
+          ...targetedTweetTwo,
+          rtBy: updatedRtByTwo,
+          rt: updatedRtTwo,
+        },
         ...tweetsAfterTwo,
       ];
-
-      console.log("updatedTweets", updatedTweets);
 
       await updateDoc(recipientUserDocRefTwo, { tweets: updatedTweets });
 
@@ -809,6 +801,7 @@ const toggleRt = async (tweetId, userId) => {
             comments: [],
             rt: 0,
             rtName: loggedUserName,
+            rtId: loggedUser,
             originalId: targetedTweet.key,
           },
         ],
@@ -832,7 +825,7 @@ const toggleRt = async (tweetId, userId) => {
     // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato e gli oggetti tweet successivi
     const updatedTweets = [
       ...tweetsBefore,
-      { ...tweet, rtBy: updatedRtBy, rt: updatedRt },
+      { ...tweet, rtBy: updatedRtBy, rt: updatedRt, youRetweeted: false },
       ...tweetsAfter,
     ];
 
@@ -861,14 +854,15 @@ const toggleRt = async (tweetId, userId) => {
     // Unire gli oggetti tweet precedenti, l'oggetto tweet modificato con il valore likes aggiornato e gli oggetti tweet successivi
     const updatedTweets = [
       ...tweetsBefore,
-      { ...tweet, rtBy: updatedRtBy, rt: updatedRt },
+      { ...tweet, rtBy: updatedRtBy, rt: updatedRt, youRetweeted: true },
       ...tweetsAfter,
     ];
 
     // Aggiorna il documento dell'utente con il nuovo array tweets aggiornato
     await updateDoc(userDocRef, { tweets: updatedTweets });
+
     // Aggiungi anche il tweet a retweetData per il documento dell'utente che retwitta
-    const tweetKey = doc(collection(db, "usertweets", userId, "tweets")).id; // Genera una chiave unica
+    const tweetKey = uuidv4(); // Genera una chiave unica
 
     const updatedRetweetData = {
       ...retweetData,
@@ -884,10 +878,12 @@ const toggleRt = async (tweetId, userId) => {
           comments: [],
           rt: 0,
           rtName: loggedUserName,
+          rtId: loggedUser,
           originalId: tweet.key,
         },
       ],
     };
+
     addNotification(userId, "retweet", tweetId);
 
     await updateDoc(userTweetsRef, updatedRetweetData);
@@ -964,7 +960,6 @@ const editProfile = async (user, updateData) => {
 
   const db = getFirestore();
   const userDocRef = doc(db, "users", userID);
-  console.log(userDocRef);
 
   // Ottieni il documento del tweet
   const tweetDoc = await getDoc(userDocRef);
@@ -980,12 +975,10 @@ const editProfile = async (user, updateData) => {
     gender: updateData.gender,
   };
 
-  console.log(updatedUserData);
   await updateDoc(userDocRef, updatedUserData);
 };
 
 const addComment = async (tweet, newTweet) => {
-  console.log("tweet intero", tweet, newTweet);
   const db = getFirestore();
 
   const userId = auth.currentUser.uid;
@@ -1040,15 +1033,13 @@ const addComment = async (tweet, newTweet) => {
         tweetData[selectedTweetIndex] = selectedTweet;
 
         userDocIdFound = userDoc.id;
-        console.log(selectedTweet);
-        console.log(tweetData);
-        console.log(userDocIdFound);
+
         // Add the promise for updating the user's document to the array
         updatePromises.push(
           updateDoc(doc(db, "usertweets", userDoc.id), { tweets: tweetData })
         );
       } else {
-        console.log("ciao");
+        /////
       }
       addNotification(tweet.userId, "comment", tweet.key);
     });
@@ -1057,13 +1048,10 @@ const addComment = async (tweet, newTweet) => {
     const tweetDoc = await getDoc(userDocRef);
     const userData = tweetDoc.data();
     const tweetData = userData.tweets;
-    console.log("tweetData, tutti i tweet", tweetData);
-    console.log(newTweet);
 
     const userNameDocRef = doc(db, "users", userId);
     const userDoc = await getDoc(userNameDocRef);
     const userInfo = userDoc.data();
-    console.log(userInfo);
 
     tweetData.forEach((tweetItem) => {
       if (tweetItem.key === tweet.key) {
@@ -1075,7 +1063,6 @@ const addComment = async (tweet, newTweet) => {
           timestamp: time,
           key: commentKey,
         });
-        console.log("Oggetto trovato con il nuovo commento:", tweetItem);
       }
     });
     addNotification(tweet.userId, "comment", tweet.key);
@@ -1085,7 +1072,6 @@ const addComment = async (tweet, newTweet) => {
 
 const fetchComments = async (onAllTweet) => {
   const db = getFirestore();
-  console.log(onAllTweet);
   const comments = [];
 
   if (onAllTweet.retweeted) {
@@ -1126,7 +1112,6 @@ const fetchComments = async (onAllTweet) => {
 };
 
 const removeComment = async (comment, onAllTweet) => {
-  console.log("partita");
   const commentKey = comment.key;
   const foundCollection = onAllTweet.userId;
 
@@ -1142,7 +1127,6 @@ const removeComment = async (comment, onAllTweet) => {
         (c) => c.key === commentKey
       );
       if (commentIndex !== -1) {
-        console.log("rimuovo");
         tweet.comments.splice(commentIndex, 1); // Rimuovi il commento dall'array
       }
     }
@@ -1160,16 +1144,15 @@ const createNotifyCollection = async () => {
   const userDocSnapshot = await getDoc(userDocRef);
 
   if (userDocSnapshot.exists()) {
-    console.log("Il documento esiste.");
     return; // Non fare nulla, poiché il documento esiste già
   } else {
-    console.log("Il documento non esiste.");
     await setDoc(userDocRef, {}); // Crea un nuovo documento vuoto con l'ID dell'utente
   }
 };
 
 const addNotification = async (recipientId, type, postId) => {
   const userId = auth.currentUser.uid;
+  const uniqueKey = uuidv4();
 
   try {
     const userNotificationDocRef = doc(db, "notifications", recipientId);
@@ -1179,23 +1162,64 @@ const addNotification = async (recipientId, type, postId) => {
 
     if (userNotificationDocSnapshot.exists()) {
       // Il documento esiste, quindi aggiungi la nuova notifica
-      const newNotification = {
-        sender: userId,
-        type: type,
-        postID: postId,
-        timestamp: new Date(),
-        read: false,
-      };
+      const userTweetDocRef = doc(db, "usertweets", recipientId);
+      const userTweetDocSnapshot = await getDoc(userTweetDocRef);
+      const cyclethis = userTweetDocSnapshot.data();
+      const tweetsArray = cyclethis.tweets;
+      let postWithMatchingKey = null;
 
-      const existingData = userNotificationDocSnapshot.data();
-      const notificationsArray = existingData.notifications || [];
+      if (tweetsArray) {
+        postWithMatchingKey = tweetsArray.find((tweet) => tweet.key === postId);
+      }
 
-      notificationsArray.push(newNotification);
+      const userTweetDocRefTwo = doc(db, "users", userId);
+      const userTweetDocSnapshotTwo = await getDoc(userTweetDocRefTwo);
+      const cyclethisTwo = userTweetDocSnapshotTwo.data();
+      const senderName = cyclethisTwo.name;
 
-      // Aggiorna il documento con l'array delle notifiche aggiornato
-      await updateDoc(userNotificationDocRef, {
-        notifications: notificationsArray,
-      });
+      let newNotification; // Define newNotification here
+
+      if (type === "follower") {
+        newNotification = {
+          senderId: userId,
+          senderName: senderName,
+          type: type,
+          timestamp: new Date(),
+          read: false,
+          uniqueKey: uniqueKey,
+        };
+
+        const existingData = userNotificationDocSnapshot.data();
+        const notificationsArray = existingData.notifications || [];
+
+        notificationsArray.push(newNotification);
+
+        // Aggiorna il documento con l'array delle notifiche aggiornato
+        await updateDoc(userNotificationDocRef, {
+          notifications: notificationsArray,
+        });
+      } else {
+        newNotification = {
+          senderId: userId,
+          senderName: senderName,
+          type: type,
+          postID: postId,
+          timestamp: new Date(),
+          read: false,
+          post: postWithMatchingKey,
+          uniqueKey: uniqueKey,
+        };
+
+        const existingData = userNotificationDocSnapshot.data();
+        const notificationsArray = existingData.notifications || [];
+
+        notificationsArray.push(newNotification);
+
+        // Aggiorna il documento con l'array delle notifiche aggiornato
+        await updateDoc(userNotificationDocRef, {
+          notifications: notificationsArray,
+        });
+      }
     }
   } catch (error) {
     console.error("Errore durante l'aggiunta della notifica:", error);
@@ -1210,17 +1234,208 @@ const fetchNotifications = async () => {
   const tweetDoc = await getDoc(userNotificationDocRef);
   const userData = tweetDoc.data();
   const tweetData = userData.notifications;
-  console.log(tweetData);
+
+  if (tweetData === undefined || tweetData === null) {
+    return 0;
+  }
 
   // Filtra le notifiche escludendo quelle con lo stesso mittente dell'utente loggato
   const filteredNotifications = tweetData.filter(
     (notification) => notification.sender !== userId
   );
 
-  console.log(filteredNotifications);
-
   return filteredNotifications;
 };
+
+const removeNotification = async (notificationKey) => {
+  const userId = auth.currentUser.uid;
+
+  try {
+    const userNotificationsDocRef = doc(db, "notifications", userId);
+    const userNotificationsDocSnapshot = await getDoc(userNotificationsDocRef);
+    const userData = userNotificationsDocSnapshot.data();
+
+    if (!userData || !userData.notifications) {
+      return;
+    }
+
+    // Find the index of the notification to be removed
+    const notificationIndex = userData.notifications.findIndex(
+      (notify) => notify.uniqueKey === notificationKey
+    );
+
+    if (notificationIndex !== -1) {
+      // Remove the notification from the array
+      userData.notifications.splice(notificationIndex, 1);
+
+      // Update the Firestore document with the updated notifications array
+      await updateDoc(userNotificationsDocRef, {
+        notifications: userData.notifications,
+      });
+    } else {
+    }
+  } catch (error) {
+    console.error("Error removing the notification", error);
+  }
+};
+
+// Function to set the background color in Firestore
+const setBackgroundColor = async (color) => {
+  const userId = auth.currentUser.uid;
+
+  try {
+    const backgroundColorDocRef = doc(db, "backgroundColors", userId);
+
+    // Check if the document exists in Firestore
+    const docSnapshot = await getDoc(backgroundColorDocRef);
+
+    if (docSnapshot.exists()) {
+      // If the document exists, update its color
+      await setDoc(backgroundColorDocRef, { color });
+    } else {
+      // If the document does not exist, create it with the given userId as the document name
+      await setDoc(backgroundColorDocRef, { color });
+    }
+  } catch (error) {
+    console.error("Error setting background color:", error);
+  }
+};
+
+// Function to get the background color for a specific user
+const getBackgroundColor = async (userId) => {
+  try {
+    // Reference the background color document for the user
+    const backgroundColorDocRef = doc(db, "backgroundColors", userId);
+
+    // Fetch the document data
+    const docSnap = await getDoc(backgroundColorDocRef);
+
+    // Check if the document exists and has data
+    if (docSnap.exists()) {
+      const backgroundColorData = docSnap.data();
+      const bgcReturn = backgroundColorData.color || "";
+      return bgcReturn; // Return the background color if it exists
+    } else {
+      // If the document doesn't exist, return an empty string or a default color
+      return "";
+    }
+  } catch (error) {
+    console.error("Error getting background color:", error);
+    throw error;
+  }
+};
+
+// Function to set the background color in Firestore
+const setImageProfile = async (imageUrl) => {
+  const userId = auth.currentUser.uid;
+
+  try {
+    const profileImageDocRef = doc(db, "profileImage", userId);
+
+    // Check if the document exists in Firestore
+    const docSnapshot = await getDoc(profileImageDocRef);
+
+    if (docSnapshot.exists()) {
+      // If the document exists, update its color
+      await setDoc(profileImageDocRef, { imageUrl });
+    } else {
+      // If the document does not exist, create it with the given userId as the document name
+      await setDoc(profileImageDocRef, { imageUrl });
+    }
+  } catch (error) {
+    console.error("Error setting background color:", error);
+  }
+};
+
+const getImageProfile = async (userId) => {
+  try {
+    // Reference the background color document for the user
+    const getImageProfileDocRef = doc(db, "profileImage", userId);
+
+    // Fetch the document data
+    const docSnap = await getDoc(getImageProfileDocRef);
+
+    // Check if the document exists and has data
+    if (docSnap.exists()) {
+      const imageProfileData = docSnap.data();
+      const ipdReturn = imageProfileData.imageUrl || "";
+      return ipdReturn; // Return the background color if it exists
+    } else {
+      // If the document doesn't exist, return an empty string or a default color
+      return "";
+    }
+  } catch (error) {
+    console.error("Error getting image url:", error);
+    throw error;
+  }
+};
+
+const uploadProfileImage = async (userId, imageFile) => {
+  let uniqueName = imageFile.name + uuidv4();
+  const storageRef = ref(storage, `profileImages/${userId}/${uniqueName}`);
+
+  try {
+    // Upload the image file to Firebase Storage
+    await uploadBytes(storageRef, imageFile);
+
+    // Get the download URL of the uploaded image
+    const imageUrl = await getDownloadURL(storageRef);
+    await setImageProfile(imageUrl);
+
+    return imageUrl; // Return the download URL
+  } catch (error) {
+    console.error("Error uploading image file:", error);
+    throw error;
+  }
+};
+
+async function whoFollowing(userId) {
+  try {
+    // Verifica se l'utente è autenticato
+    const loggedUser = auth.currentUser.uid;
+
+    if (loggedUser) {
+      const docName = doc(db, "users", loggedUser);
+      const docSnapshot = await getDoc(docName);
+
+      if (docSnapshot.exists) {
+        const whoFollowing = docSnapshot.data().whoFollowing;
+        let isUserFollowing = false;
+
+        whoFollowing.some((item, index) => {
+          if (item.id === userId) {
+            isUserFollowing = true;
+            return true; // Termina la ricerca, abbiamo trovato una corrispondenza
+          }
+        });
+
+        if (isUserFollowing === true) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Errore durante la verifica dell'utente:", error);
+    return;
+  }
+}
+
+async function navbarLogIn() {
+  try {
+    const loggedUser = auth.currentUser.uid;
+
+    const docRef = doc(db, "notifications", loggedUser);
+    const docSnapshot = await getDoc(docRef);
+
+    if (docSnapshot.exists) {
+      await setDoc(docRef, { notifications: [] });
+    }
+  } catch (error) {
+    console.error("Errore durante l'aggiunta dell'array di notifiche:", error);
+  }
+}
 
 export {
   createUserDocument,
@@ -1243,6 +1458,13 @@ export {
   createNotifyCollection,
   addNotification,
   fetchNotifications,
+  removeNotification,
+  setBackgroundColor,
+  getBackgroundColor,
+  uploadProfileImage,
+  getImageProfile,
+  whoFollowing,
+  navbarLogIn,
   storage,
   auth,
 };

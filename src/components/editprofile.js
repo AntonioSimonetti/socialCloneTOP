@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from "react";
 import countries from "countries-list";
-import { editProfile } from "../firebaseUtils";
+import {
+  editProfile,
+  setBackgroundColor,
+  uploadProfileImage,
+} from "../firebaseUtils";
 import "../styles/editprofile.css";
 
-function Editprofile({ onClose, onUser }) {
+function Editprofile({ onClose, onUser, onImageUpload, onImageChange }) {
   const [position, setPosition] = useState(onUser?.position || "");
   const [age, setAge] = useState(onUser?.age || "");
   const [gender, setGender] = useState(onUser?.gender || "");
   const [bio, setBio] = useState(onUser?.bio || "");
+  const [bgc, setBgc] = useState("#ffffff");
+  const [image, setImage] = useState(null);
 
-  const handleConfirmClick = () => {
-    // Qui chiamiamo la funzione editProfile con le modifiche apportate dall'utente
+  const handleConfirmClick = async () => {
+    // Update the header background color in the parent component
 
     const updatedData = {
       position: position,
@@ -19,6 +25,21 @@ function Editprofile({ onClose, onUser }) {
       gender: gender,
     };
 
+    // Call the setBackgroundColor function to save the background color
+    await setBackgroundColor(bgc)
+      .then(() => {
+        console.log("Background color saved successfully");
+      })
+      .catch((error) => {
+        console.error("Error saving background color:", error);
+      });
+
+    // Upload the selected image if it exists
+    if (image) {
+      onImageUpload(image); // Call the callback function with the URL
+      uploadProfileImage(onUser.id, image);
+    }
+
     editProfile(onUser, updatedData)
       .then(() => {
         onClose();
@@ -26,6 +47,11 @@ function Editprofile({ onClose, onUser }) {
       .catch((error) => {
         console.error("Error updating profile:", error);
       });
+  };
+
+  const handleImageChange = (e) => {
+    const selectedImage = e.target.files[0];
+    setImage(selectedImage);
   };
 
   return (
@@ -39,6 +65,7 @@ function Editprofile({ onClose, onUser }) {
         <input
           type="text"
           id="bio"
+          maxLength={100}
           placeholder="Enter your bio"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
@@ -77,6 +104,21 @@ function Editprofile({ onClose, onUser }) {
             </option>
           ))}
         </select>
+        <label htmlFor="backgroundColor">Background Color:</label>
+        <input
+          type="color"
+          id="backgroundColor"
+          value={bgc}
+          onChange={(e) => setBgc(e.target.value)}
+        />
+
+        <label htmlFor="profileImage">Profile Image:</label>
+        <input
+          type="file"
+          id="profileImage"
+          accept="image/*"
+          onChange={handleImageChange}
+        />
 
         <button onClick={handleConfirmClick}>Confirm</button>
       </div>

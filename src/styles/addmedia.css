@@ -1,10 +1,11 @@
 .add-media {
-  width: 300px;
-  padding: 20px;
-  border: 1px solid #ccc;
+  width: 80vw;
+  padding: 5px;
+  border: 2px solid black;
   border-radius: 5px;
   background-color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: black;
 }
 
 .error-message {
@@ -14,7 +15,7 @@
 }
 
 button {
-  background-color: #007bff;
+  background-color: var(--colore-primario);
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -24,5 +25,54 @@ button {
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: var(--colore-primario);
+  filter: brightness(200%);
+}
+
+.close-btn-div-addMedia {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.upload-div-addMedia {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-height: 690px) {
+  .add-media {
+    width: 80vw;
+    padding: 5px;
+    border: 2px solid black;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: black;
+    margin-top: -2rem;
+  }
+}
+
+@media (min-height: 950px) {
+  .add-media {
+    width: 80vw;
+    padding: 5px;
+    border: 2px solid black;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: black;
+    margin-top: 5rem;
+  }
+}
+
+@media (min-height: 1100px) {
+  .add-media {
+    width: 80vw;
+    padding: 5px;
+    border: 2px solid black;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: black;
+    margin-top: 15rem;
+  }
 }

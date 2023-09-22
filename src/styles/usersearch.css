@@ -16,6 +16,7 @@
 
 .input {
   margin-top: 2rem;
+  width: 50vw;
 }
 
 .searchUl {
@@ -26,16 +27,61 @@
   flex-direction: column;
   gap: 0.25rem;
   margin-top: 0.5rem;
+  color: var(--colore-testo);
 }
 
 .searchElement {
   padding: 8px;
-  background-color: #f5f5f5;
+  background-color: black;
   border-radius: 4px;
   margin-bottom: 4px;
   width: 168px;
+  border: 2px solid var(--colore-primario);
 }
 
 .searchElement:hover {
   background-color: #e0e0e0;
+  border: none;
+  cursor: pointer;
+}
+
+/* Aggiungi stili alla classe 'typing-text' */
+.typing-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10rem;
+  margin: 0;
+  color: var(--colore-testo);
+  white-space: nowrap;
+}
+
+.animationP {
+  animation: blink-caret 0.75s step-end infinite;
+}
+
+.textDivSearch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  width: 80vw;
+}
+
+/* Definisci l'animazione 'blink-caret' */
+@keyframes blink-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media screen and (max-width: 690px) {
+  .typing-text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    margin: 0;
+    color: var(--colore-testo);
+  }
 }

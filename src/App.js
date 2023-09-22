@@ -8,10 +8,12 @@ import Profile from "./components/profile";
 import Addtweet from "./components/addtweet";
 import UserSearch from "./components/usersearch";
 import Notification from "./components/notifications";
+import Infodiv from "./components/infodiv";
 
 function App() {
   const [user, setUser] = useState(null);
   const [currentComponent, setCurrentComponent] = useState("homepage");
+  const [navbarKey, setNavbarKey] = useState(0);
 
   useEffect(() => {
     const auth = getAuth();
@@ -42,6 +44,11 @@ function App() {
     setCurrentComponent("notifications");
   };
 
+  // Update the key to force re-render of Navbar
+  useEffect(() => {
+    setNavbarKey((prevKey) => prevKey + 1);
+  }, [currentComponent]);
+
   return (
     <div className="App">
       {user ? (
@@ -53,6 +60,7 @@ function App() {
           {currentComponent === "notifications" && <Notification />}
 
           <Navbar
+            key={navbarKey}
             onProfileClick={handleProfileClick}
             onHomeClick={handleHomeClick}
             onAddTweetClick={handleAddTweetClick}
@@ -61,7 +69,12 @@ function App() {
           />
         </>
       ) : (
-        <LandingPage />
+        <>
+          <div className="landingDiv">
+            <Infodiv />
+            <LandingPage />
+          </div>
+        </>
       )}
     </div>
   );

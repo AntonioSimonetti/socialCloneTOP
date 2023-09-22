@@ -31,7 +31,6 @@ const Profiletweets = (props) => {
   }, [selectedTweetId]);
 
   const handleComment = (tweetId) => {
-    console.log(tweetId.key);
     setSelectedTweetId((prevSelectedTweetId) => {
       // Verifica se il tweetId corrente è già presente nello stato
       const isTweetSelected = prevSelectedTweetId === tweetId.key;
@@ -49,7 +48,6 @@ const Profiletweets = (props) => {
   }, [userId]);
 
   const fetchAllTweets = async () => {
-    console.log("avvio");
     const allTweets = await fetchUserTweets(); // Recupera tutti i tweet
     setTweets(allTweets.reverse()); // Inverte l'ordine dei tweet
     setLoading(false);
@@ -72,7 +70,6 @@ const Profiletweets = (props) => {
   const displayedTweets = tweets.slice(startIndex, endIndex);
 
   const handleToggleLike = async (tweetId, userId) => {
-    console.log("handletogglelike executed");
     try {
       await toggleLike(tweetId, userId);
       const updatedTweets = await fetchUserTweets();
@@ -109,7 +106,6 @@ const Profiletweets = (props) => {
   };
 
   const handleViewImage = (tweet) => {
-    console.log("View Image button clicked for tweet:", tweet);
     setViewingImage(true);
   };
 
@@ -125,17 +121,23 @@ const Profiletweets = (props) => {
               return (
                 <div key={tweet.key} className="tweet">
                   <div className="topTweetDiv">
-                    <h3>Retweeted by {user.name}:</h3>
-                    <h3>{tweet.name}</h3>
-                    <p>idplaceholder</p>
-                    <p>-</p>
-                    <p>{tweet.date}</p>
-                    <p>{tweet.timestamp}</p>
-                    <button
-                      onClick={() => handleRemoveTweet(tweet.key, tweet.userId)}
-                    >
-                      X
-                    </button>
+                    <div className="topTweetInfoDivHeader">
+                      <h3>{user.name}</h3>
+                      <p>idplaceholder</p>
+                      <p>-</p>
+                      <p>{tweet.date}</p>
+                      <p>{tweet.timestamp}</p>
+                    </div>
+                    <div className="btnDivDeleteTweet">
+                      <button
+                        className="buttonProfileDeleteTweet"
+                        onClick={() =>
+                          handleRemoveTweet(tweet.key, tweet.userId)
+                        }
+                      >
+                        X
+                      </button>
+                    </div>
                   </div>
 
                   <div className="contentDiv">
@@ -144,7 +146,7 @@ const Profiletweets = (props) => {
 
                   <div className="reactionsDiv">
                     <div
-                      className="likesDiv"
+                      className={`likesDiv ${tweet.isActive ? "active" : ""}`}
                       onClick={() => handleToggleLike(tweet.key, userId.uid)}
                     >
                       <img src={heartsvg} alt="likeicon" />
@@ -197,16 +199,23 @@ const Profiletweets = (props) => {
               return (
                 <div key={tweet.key} className="tweet">
                   <div className="topTweetDiv">
-                    <h3>{user.name}</h3>
-                    <p>idplaceholder</p>
-                    <p>-</p>
-                    <p>{tweet.date}</p>
-                    <p>{tweet.timestamp}</p>
-                    <button
-                      onClick={() => handleRemoveTweet(tweet.key, tweet.userId)}
-                    >
-                      X
-                    </button>
+                    <div className="topTweetInfoDivHeader">
+                      <h3>{user.name}</h3>
+                      <p>idplaceholder</p>
+                      <p>-</p>
+                      <p>{tweet.date}</p>
+                      <p>{tweet.timestamp}</p>
+                    </div>
+                    <div className="btnDivDeleteTweet">
+                      <button
+                        className="buttonProfileDeleteTweet"
+                        onClick={() =>
+                          handleRemoveTweet(tweet.key, tweet.userId)
+                        }
+                      >
+                        X
+                      </button>
+                    </div>
                   </div>
 
                   <div className="contentDiv">

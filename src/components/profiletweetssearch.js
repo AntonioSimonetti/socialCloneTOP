@@ -23,7 +23,6 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
   }, [selectedTweetId]);
 
   const handleComment = (tweetId) => {
-    console.log(tweetId.key);
     setSelectedTweetId((prevSelectedTweetId) => {
       // Verifica se il tweetId corrente è già presente nello stato
       const isTweetSelected = prevSelectedTweetId === tweetId.key;
@@ -83,7 +82,6 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
   };
 
   const handleViewImage = (tweet) => {
-    console.log("View Image button clicked for tweet:", tweet);
     setViewingImage(true);
   };
 
@@ -96,7 +94,6 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
           {displayedTweets.map((tweet) => {
             if (tweet.retweeted) {
               // Contenuto del retweet
-              console.log(tweet);
               return (
                 <div key={tweet.key} className="tweet">
                   <div className="topTweetDiv">
@@ -164,7 +161,6 @@ const ProfileTweetsSearch = ({ documentId, user }) => {
               );
             } else {
               // Contenuto del tweet originale
-              console.log(tweet);
 
               return (
                 <div key={tweet.key} className="tweet">

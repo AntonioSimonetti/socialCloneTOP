@@ -8,11 +8,13 @@ function UserSearch() {
   const [searchResults, setSearchResults] = useState([]);
   const [selectedUserDocument, setSelectedUserDocument] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [showProfileSearch, setShowProfileSearch] = useState(false); // Nuova variabile di stato
+  const [showProfileSearch, setShowProfileSearch] = useState(false);
+  const [typedText, setTypedText] = useState("");
 
   const handleSearchChange = async (e) => {
     const text = e.target.value;
     setSearchText(text);
+    setTypedText(text);
 
     if (text.length === 0) {
       setSearchResults([]);
@@ -21,6 +23,12 @@ function UserSearch() {
 
     // Esegui la ricerca solo se il campo di ricerca contiene almeno una lettera
     const searchResults = await fetchUserSearch(text);
+
+    if (text.charAt(0) === "@") {
+      const searchResults = await fetchUserSearch(text);
+      setSearchResults(searchResults);
+      return;
+    }
 
     // Filtra i risultati in base alle corrispondenze con il nome (case-insensitive)
     const filteredResults = searchResults.filter((user) => {
@@ -50,9 +58,10 @@ function UserSearch() {
         <>
           <input
             type="text"
-            placeholder="Cerca un utente..."
+            placeholder="Search an user..."
             value={searchText}
             onChange={handleSearchChange}
+            maxLength={30}
             className="input"
           />
           <ul className="searchUl">
@@ -66,6 +75,12 @@ function UserSearch() {
               </div>
             ))}
           </ul>
+          <div className="textDivSearch">
+            <p className="typing-text">
+              {typedText} {/* Aggiungi il trattino basso intermittente */}
+              <span className="animationP">_</span>
+            </p>
+          </div>
         </>
       )}
     </div>

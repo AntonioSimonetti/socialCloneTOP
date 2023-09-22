@@ -13,11 +13,9 @@ function Comment({ onAllTweet, setSelectedTweetId }) {
   const [loggedUser, setLoggedUser] = useState(null);
 
   useEffect(() => {
-    console.log("comment renderizzato");
     const fetchCommentsData = async () => {
       let commenti = await fetchComments(onAllTweet);
       setComments(commenti);
-      console.log(commenti);
     };
 
     fetchCommentsData();
@@ -28,21 +26,14 @@ function Comment({ onAllTweet, setSelectedTweetId }) {
     setLoggedUser(userAuth);
   }, []);
 
-  useEffect(() => {
-    console.log(loggedUser);
-  }, [loggedUser]);
-
   const handleInputChange = (event) => {
     setNewComment(event.target.value);
-    console.log("newCommentOnChange", newComment);
   };
 
   // Funzione per gestire l'invio del nuovo commento
   const handleSubmit = async () => {
     // Chiamata alla funzione addComment per inviare il nuovo commento al database
-    console.log("newcommentinSubmit", newComment);
     await addComment(onAllTweet, newComment);
-    console.log("newComment in comment", newComment);
 
     setNewComment("");
   };

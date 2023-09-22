@@ -2,23 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import "../styles/navbar.css";
 import homesvg from "../img/home-2-svgrepo-com.svg";
 import searchsvg from "../img/magnifying-glass-for-search-svgrepo-com.svg";
-import notifyoffsvg from "../img/bell-svgrepo-com.svg";
-//import notifyonsvg from "../img/bell-bing-svgrepo-com.svg";
 import createChatsvg from "../img/chat-square-call-svgrepo-com.svg";
 import profilesvg from "../img/user-svgrepo-com.svg";
-
-/* 
-https://www.svgrepo.com/collection/solar-bold-icons/1
---
-https://www.svgrepo.com/svg/525248/bell
-https://www.svgrepo.com/svg/525249/bell-bing
-https://www.svgrepo.com/svg/525374/home-2
-https://www.svgrepo.com/svg/525415/logout-2
-https://www.svgrepo.com/svg/525577/user-circle
-https://www.svgrepo.com/svg/525770/chat-square-call
-https://www.svgrepo.com/svg/479452/magnifying-glass-for-search
-
-*/
+import { fetchNotifications, navbarLogIn } from "../firebaseUtils";
 
 function Navbar({
   onSearchClick,
@@ -26,15 +12,52 @@ function Navbar({
   onAddTweetClick,
   onProfileClick,
   onNotificationsClick,
+  key,
 }) {
   const [isAtBottom, setIsAtBottom] = useState(false);
   const navbarRef = useRef(null);
+  const notificationLengthTwoRef = useRef(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  useEffect(() => {
+    navbarLogIn();
+  }, []);
+
+  useEffect(() => {
+    if (notificationCount > 0) {
+      notificationLengthTwoRef.current.classList.add("active");
+    } else {
+      notificationLengthTwoRef.current.classList.remove("active");
+    }
+  }, [notificationCount]);
+
+  useEffect(() => {
+    const updateNotificationCount = async () => {
+      try {
+        const notifications = await fetchNotifications();
+
+        if (
+          notifications === null ||
+          notifications === undefined ||
+          notifications.length === 0
+        ) {
+          setNotificationCount(0);
+          return;
+        } else {
+          setNotificationCount(notifications.length);
+        }
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    updateNotificationCount();
+  });
 
   const handleScroll = () => {
     const scrolledToBottom =
       window.innerHeight + window.scrollY >= document.body.scrollHeight;
     setIsAtBottom(scrolledToBottom);
-    console.log("isAtBottom:", scrolledToBottom);
   };
 
   useEffect(() => {
@@ -55,6 +78,14 @@ function Navbar({
     }
   }, [isAtBottom]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAtBottom(false);
+    }, 2); // You can adjust the delay if needed
+
+    return () => clearTimeout(timer);
+  }, [key]);
+
   return (
     <div className={`navbar ${isAtBottom ? "hidden" : ""}`} ref={navbarRef}>
       <div className="icon-container" onClick={onHomeClick}>
@@ -67,11 +98,13 @@ function Navbar({
         <img src={createChatsvg} alt="icon" onClick={onAddTweetClick} />
       </div>
       <div className="icon-container">
-        <img
-          src={notifyoffsvg}
-          alt="notifyicon"
+        <p
+          className="notification-lengthTwo"
           onClick={onNotificationsClick}
-        />{" "}
+          ref={notificationLengthTwoRef}
+        >
+          {notificationCount}
+        </p>
       </div>
       <div className="icon-container">
         <img src={profilesvg} alt="createicon" onClick={onProfileClick} />{" "}

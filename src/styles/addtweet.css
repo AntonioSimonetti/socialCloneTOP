@@ -4,23 +4,25 @@
   align-items: center;
   flex-direction: column;
   padding: 10px;
-  background-color: #f5f8fa;
+  background-color: #ffffff;
   height: 40vh;
   width: 80vw;
   margin-top: 5rem;
   border: 2px solid black;
   gap: 7rem;
+  border-radius: 8px;
 }
 
 .add-media-button,
 .publish-button {
-  background-color: #1da1f2;
-  color: #fff;
+  background-color: var(--colore-primario);
+  color: var(--colore-testo);
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
   margin-left: 10px;
   cursor: pointer;
+  font-family: "Noto Sans Mono", monospace;
 }
 
 .input-field {
@@ -56,6 +58,7 @@
   align-items: center;
   width: 7rem;
   height: 6rem;
+  border-radius: 8px;
 }
 
 .buttons {
@@ -66,20 +69,10 @@
   margin-top: 10px;
 }
 
-.add-media-button,
-.publish-button {
-  background-color: #1da1f2;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  margin-left: 10px;
-  cursor: pointer;
-}
-
 .add-media-button:hover,
 .publish-button:hover {
-  background-color: #0c87c0;
+  background-color: var(--colore-primario);
+  filter: brightness(200%);
 }
 
 .error {
@@ -110,36 +103,59 @@
   }
 }
 
-@media (max-width: 300px) {
+@media (max-width: 320px) {
   .add-tweet {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    padding: 3px;
+    background-color: #ffffff;
+    height: 40vh;
+    width: 80vw;
     margin-top: 1rem;
+    gap: 7rem;
+    border-radius: 8px;
   }
   .input-field textarea {
-    width: 100%;
+    width: 80%;
     height: 40px;
     resize: none;
     border: 1px solid #ccc;
     padding: 5px;
+    font-size: 10px;
+  }
+
+  .character-count {
+    font-size: 10px;
   }
 
   .input-field .avatar {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 8rem;
-    height: 4rem;
-    border-radius: 18px;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 8px;
     overflow: hidden;
   }
 
   .add-media-button,
   .publish-button {
-    background-color: #1da1f2;
-    color: #fff;
+    background-color: var(--colore-primario);
+    color: var(--colore-testo);
+    font-family: "Noto Sans Mono", monospace;
     border: none;
-    padding: 8px 6px;
+    padding: 2px 3px !important;
     border-radius: 5px;
     margin-left: 10px;
     cursor: pointer;
+    font-size: 10px;
+  }
+
+  .add-media-button:hover,
+  .publish-button:hover {
+    background-color: var(--colore-primario);
+    filter: brightness(200%);
   }
 }

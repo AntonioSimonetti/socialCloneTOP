@@ -1,0 +1,35 @@
+.infoDiv {
+  margin-top: 1rem;
+  background-color: black;
+  height: 25px;
+  width: 100vw;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+}
+
+.flexMarquee {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: fit-content; /* Set width to fit content */
+  position: absolute;
+  animation: marquee 40s linear infinite;
+}
+
+.infoDiv span {
+  width: 100%; /* Set width to 100% to prevent overflow */
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%); /* Change this to -100% */
+  }
+}
+
+@media screen and (max-width: 600px) {
+  /* Add any responsive styles you need */
+}

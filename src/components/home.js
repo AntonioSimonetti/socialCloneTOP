@@ -5,7 +5,6 @@ import {
   exploreTweets,
   toggleLike,
   toggleRt,
-  addComment,
   auth,
   createNotifyCollection,
 } from "../firebaseUtils";
@@ -30,7 +29,6 @@ function Homepage() {
   const [viewingImage, setViewingImage] = useState(false);
 
   const handleViewImage = (tweet) => {
-    console.log("View Image button clicked for tweet:", tweet);
     setViewingImage(true);
   };
 
@@ -62,7 +60,6 @@ function Homepage() {
   };
 
   const handleComment = (tweetId) => {
-    console.log(tweetId.key);
     setSelectedTweetId((prevSelectedTweetId) => {
       // Verifica se il tweetId corrente è già presente nello stato
       const isTweetSelected = prevSelectedTweetId === tweetId.key;
@@ -142,9 +139,9 @@ function Homepage() {
     const tweetsByDate = divideTweetsByDate(tweets);
 
     // Log each of the new arrays
-    for (const dateKey in tweetsByDate) {
+    /*for (const dateKey in tweetsByDate) {
       console.log(`Tweets for date ${dateKey}:`, tweetsByDate[dateKey]);
-    }
+    }*/
   }, [tweets]);
 
   useEffect(() => {
@@ -163,16 +160,27 @@ function Homepage() {
   return (
     <div className="homepage">
       <div className="headerDiv">
-        <p>Homepage Test</p>
-        <button onClick={handleLogout}>Logout</button>
-        <button onClick={handleToggleExplore}>
-          {" "}
-          {showExplore ? "Following" : "Explore"}
-        </button>
+        <div className="textDiv">
+          <p>
+            {" "}
+            {showExplore
+              ? "You are browsing the explore section"
+              : "You are browsing the following section"}
+          </p>
+        </div>
+        <div className="buttonsDivTop">
+          <button className="homeButtons" onClick={handleToggleExplore}>
+            {" "}
+            {showExplore ? "Following" : "Explore"}
+          </button>
+          <button className="homeButtons" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
       </div>
       <div className="componentButtonDiv">
-        {loading ? (
-          <p>Loading...</p>
+        {displayedTweets.length === 0 ? (
+          <p>No tweet yet...</p>
         ) : (
           <div className="tweetsDiv">
             {displayedTweets.map((tweet) => {
@@ -195,14 +203,16 @@ function Homepage() {
 
                     <div className="reactionsDiv">
                       <div
-                        className="likesDiv"
+                        className={`likesDiv ${tweet.isActive ? "active" : ""}`}
                         onClick={() => handleToggleLike(tweet.key, user.uid)}
                       >
                         <img src={heartsvg} alt="likeicon" />
                         <p>{tweet.likes}</p>
                       </div>
                       <div
-                        className="rtDiv"
+                        className={`rtDiv ${
+                          tweet.youRetweeted ? "colore" : ""
+                        }`}
                         onClick={() => handleToggleRt(tweet.key, tweet.userId)}
                       >
                         <img src={rtsvg} alt="rticon" />
@@ -247,6 +257,7 @@ function Homepage() {
                 // Contenuto del tweet originale
                 return (
                   <div key={tweet.key} className="tweet">
+                    {" "}
                     <div className="topTweetDiv">
                       <h3>{tweet.name}</h3>
                       <p>idplaceholder</p>
@@ -254,14 +265,12 @@ function Homepage() {
                       <p>{tweet.date}</p>
                       <p>{tweet.timestamp}</p>
                     </div>
-
                     <div className="contentDiv">
                       <p>{tweet.content}</p>
                     </div>
-
                     <div className="reactionsDiv">
                       <div
-                        className="likesDiv"
+                        className={`likesDiv ${tweet.isActive ? "active" : ""}`}
                         onClick={() =>
                           handleToggleLike(tweet.key, tweet.userId)
                         }
@@ -270,7 +279,9 @@ function Homepage() {
                         <p>{tweet.likes}</p>
                       </div>
                       <div
-                        className="rtDiv"
+                        className={`rtDiv ${
+                          tweet.youRetweeted ? "colore" : ""
+                        }`}
                         onClick={() => handleToggleRt(tweet.key, tweet.userId)}
                       >
                         <img src={rtsvg} alt="rticon" />
@@ -316,10 +327,16 @@ function Homepage() {
           </div>
         )}
         <div className="buttonsDiv">
-          {startIndex >= 5 && <button onClick={handleGoBack}>Go Back</button>}
+          {startIndex >= 5 && (
+            <button onClick={handleGoBack} className="controlButton">
+              Go Back
+            </button>
+          )}
           {endIndex < tweets.length &&
             dataLoaded && ( // Assicurati che i dati siano stati caricati prima di mostrare il pulsante "Load More"
-              <button onClick={handleLoadMore}>Load More</button>
+              <button onClick={handleLoadMore} className="controlButton">
+                Load More
+              </button>
             )}
         </div>
       </div>

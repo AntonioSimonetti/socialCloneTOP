@@ -1,10 +1,114 @@
+/* Style for headerDiv */
 .headerDiv {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.5rem;
+  border-bottom: var(--colore-primario) 2px solid;
+  height: 3rem;
+  overflow: hidden;
+  padding: 1rem;
 }
 
-.buttonsDiv {
-  background-color: red;
+/* Style for textDiv and buttonsDiv inside headerDiv */
+.textDiv {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  height: 5%;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+.buttonsDivTop {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+/* Style for homeButtons inside headerDiv */
+.homeButtons {
+  padding: 10px 10px;
+  background-color: var(--colore-primario);
+  font-family: "Noto Sans Mono", monospace;
+  width: 5rem;
+  height: 2rem;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.homeButtons:hover {
+  background-color: var(--colore-primario);
+  filter: brightness(3);
+}
+
+.controlButton {
+  background-color: var(--colore-primario) !important;
+  font-family: "Noto Sans Mono", monospace;
+}
+
+.controlButton:hover {
+  background-color: var(--colore-primario);
+  filter: brightness(3);
+}
+
+.tweet {
+  background-color: black;
+  border-bottom: 2px solid var(--colore-primario);
+}
+
+.likesDiv.active img {
+  filter: invert(15%) sepia(51%) saturate(10000%) hue-rotate(348deg)
+    brightness(50%) contrast(200%);
+}
+
+.rtDiv.colore img {
+  filter: invert(20%) sepia(33%) saturate(5803%) hue-rotate(106deg)
+    brightness(50%) contrast(104%);
+}
+
+@media screen and (max-width: 320px) {
+  .homeButtons {
+    padding: 10px 10px;
+    background-color: var(--colore-primario);
+    font-family: "Noto Sans Mono", monospace;
+    font-size: 10px;
+    width: 3.5rem;
+    height: 1rem;
+    padding: 1rem;
+    border-radius: 16px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media screen and (max-width: 250px) {
+  .headerDiv {
+    font-size: 12px;
+  }
+
+  .homeButtons {
+    padding: 10px 10px;
+    background-color: var(--colore-primario);
+    font-family: "Noto Sans Mono", monospace;
+    font-size: 6px;
+    width: 2.5rem;
+    height: 1rem;
+    padding: 1rem;
+    border-radius: 16px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

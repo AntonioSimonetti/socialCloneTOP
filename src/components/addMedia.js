@@ -30,6 +30,7 @@ function AddMedia({ onClose, onImageUrlChange }) {
       "mp3",
       "wav",
     ];
+    const fileName = imageUpload.name;
     const fileExtension = imageUpload.name.split(".").pop().toLowerCase();
 
     if (!allowedExtensions.includes(fileExtension)) {
@@ -39,13 +40,28 @@ function AddMedia({ onClose, onImageUrlChange }) {
       return;
     }
 
-    setUploading(true); // Imposta lo stato di uploading a true
+    if (fileName.includes("-")) {
+      setFileError("File names cannot contain a hyphen (-).");
+      return;
+    }
 
-    let uniqueName = imageUpload.name + v4();
+    setUploading(true);
 
-    const imageRef = ref(storage, `images/${uniqueName}`);
+    let uniqueName = imageUpload.name + "-" + v4();
+    let uploadPath = `images/${uniqueName}`;
+
+    // Verifica se il file è un video e imposta il percorso di upload appropriato
+    if (
+      fileExtension === "mp4" ||
+      fileExtension === "webm" ||
+      fileExtension === "ogg"
+    ) {
+      uploadPath = `videos/${uniqueName}`;
+    }
+
+    const imageRef = ref(storage, uploadPath);
     uploadBytes(imageRef, imageUpload).then((snapshot) => {
-      alert("Image Uploaded");
+      alert("Image/Video Uploaded");
 
       getDownloadURL(imageRef).then((url) => {
         onImageUrlChange(url);
@@ -57,20 +73,29 @@ function AddMedia({ onClose, onImageUrlChange }) {
 
   return (
     <div className="add-media">
-      <button className="close-button" onClick={onClose}>
-        X
-      </button>
-      <input
-        type="file"
-        accept=".jpeg, .jpg, .png, .mp4, .gif, .svg, .pdf, .jp2, .webp, .avi, .mov, .mp3, .wav"
-        onChange={(event) => {
-          setImageUpload(event.target.files[0]);
-          setFileError(null); // Reset error on file change
-        }}
-      />
+      <div className="close-btn-div-addMedia">
+        <button className="close-button" onClick={onClose}>
+          X
+        </button>
+      </div>
+      <div className="input-btn-div-addMedia">
+        <input
+          className="input-addMedia"
+          type="file"
+          accept=".jpeg, .jpg, .png, .mp4, .gif, .svg, .pdf, .jp2, .webp, .avi, .mov, .mp3, .wav"
+          onChange={(event) => {
+            setImageUpload(event.target.files[0]);
+            setFileError(null); // Reset error on file change
+          }}
+        />
+      </div>
       {fileError && <p className="error-message">{fileError}</p>}
-      <button onClick={uploadImage}>Upload</button>
-      {uploading && <p>Uploading...</p>}
+      <div className="upload-div-addMedia">
+        <button onClick={uploadImage} className="btn-upload-addMedia">
+          Upload
+        </button>
+        {uploading && <p>Uploading...</p>}
+      </div>
     </div>
   );
 }

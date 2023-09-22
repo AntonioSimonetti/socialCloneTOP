@@ -59,10 +59,10 @@ function RegistrationForm({ onBack }) {
         email: email,
         position: position,
         age: age,
+        photoURL: null,
       };
       await createUserDocument(userData);
     } catch (error) {
-      console.log(error);
       if (error.code === "auth/email-already-in-use") {
         setError("Email already in use.");
       } else {
@@ -75,8 +75,11 @@ function RegistrationForm({ onBack }) {
     <div className="registrationForm">
       {error && <p>{error}</p>}
       <div className="labelInput">
-        <label htmlFor="username">Name:</label>
+        <label htmlFor="username" className="small-input-label">
+          Name:
+        </label>
         <input
+          className="small-input"
           type="text"
           id="username"
           name="username"
@@ -85,8 +88,11 @@ function RegistrationForm({ onBack }) {
           onChange={(e) => setUsername(e.target.value)}
         />
 
-        <label htmlFor="age">Age:</label>
+        <label htmlFor="age" className="small-input-label">
+          Age:
+        </label>
         <input
+          className="small-input"
           type="number"
           id="age"
           name="age"
@@ -96,8 +102,11 @@ function RegistrationForm({ onBack }) {
           onChange={(e) => setAge(e.target.value)}
         />
 
-        <label htmlFor="email">Email:</label>
+        <label htmlFor="email" className="small-input-label">
+          Email:
+        </label>
         <input
+          className="small-input"
           type="email"
           id="email"
           name="email"
@@ -106,8 +115,11 @@ function RegistrationForm({ onBack }) {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        <label htmlFor="password">Password:</label>
+        <label htmlFor="password" className="small-input-label">
+          Password:
+        </label>
         <input
+          className="small-input"
           type="password"
           id="password"
           name="password"
@@ -116,8 +128,11 @@ function RegistrationForm({ onBack }) {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <label htmlFor="confirmPassword">Confirm Password:</label>
+        <label htmlFor="confirmPassword" className="small-input-label">
+          Confirm Password:
+        </label>
         <input
+          className="small-input"
           type="password"
           id="confirmPassword"
           name="confirmPassword"
@@ -126,8 +141,11 @@ function RegistrationForm({ onBack }) {
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
 
-        <label htmlFor="position">Position:</label>
+        <label htmlFor="position" className="small-input-label">
+          Position:
+        </label>
         <select
+          className="small-select-label"
           id="position"
           name="position"
           value={position}
