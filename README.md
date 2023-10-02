@@ -4,7 +4,7 @@ This is a Social Network project created as part of The Odin Project curriculum.
 
 **Live Version**
 
-A live version of the project can be accessed here: https://socialc-34645.web.app/
+A Live version of the project can be accessed here: https://socialc-34645.web.app/
 
 **Benefits**
 
