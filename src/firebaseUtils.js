@@ -12,7 +12,12 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+} from "firebase/auth";
 import "firebase/firestore";
 import { firebaseConfig } from "./firebase";
 import { v4 as uuidv4 } from "uuid";
@@ -65,7 +70,8 @@ const fetchUserProfileData = async (userId) => {
 const signInWithGoogle = () => {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
-  return signInWithPopup(auth, provider);
+  //return signInWithPopup(auth, provider);
+  return signInWithRedirect(auth, provider);
 };
 
 const signInWithGoogleAndCreateUser = async () => {

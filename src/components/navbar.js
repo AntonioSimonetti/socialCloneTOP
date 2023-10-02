@@ -12,7 +12,7 @@ function Navbar({
   onAddTweetClick,
   onProfileClick,
   onNotificationsClick,
-  key,
+  Nkey,
 }) {
   const [isAtBottom, setIsAtBottom] = useState(false);
   const navbarRef = useRef(null);
@@ -84,7 +84,7 @@ function Navbar({
     }, 2); // You can adjust the delay if needed
 
     return () => clearTimeout(timer);
-  }, [key]);
+  }, [Nkey]);
 
   return (
     <div className={`navbar ${isAtBottom ? "hidden" : ""}`} ref={navbarRef}>

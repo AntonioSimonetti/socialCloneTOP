@@ -60,7 +60,7 @@ function App() {
           {currentComponent === "notifications" && <Notification />}
 
           <Navbar
-            key={navbarKey}
+            Nkey={navbarKey}
             onProfileClick={handleProfileClick}
             onHomeClick={handleHomeClick}
             onAddTweetClick={handleAddTweetClick}
