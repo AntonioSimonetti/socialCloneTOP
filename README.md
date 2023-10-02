@@ -1,32 +1,70 @@
-**SOCIAL NETWORK CLONE**
+# Getting Started with Create React App
 
-This is a Social Network project created as part of The Odin Project curriculum.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-**Live Version**
+## Available Scripts
 
-A live version of the project can be accessed here: https://socialc-34645.web.app/
+In the project directory, you can run:
 
-**Benefits**
+### `npm start`
 
-This project has significantly contributed to my web development skills, providing valuable hands-on experience in creating a full-fledged social networking platform. Some key benefits and learning outcomes include:
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-- Front-end Development: The project allowed me to strengthen my front-end development skills by creating user-friendly and responsive user interfaces.
-- React Expertise: Building the social network with React improved my understanding of component-based architecture, state management, and routing.
-- Back-end Integration: Integrating Firebase as the backend exposed me to serverless database management and real-time data synchronization. This experience improved my understanding of the connection between front-end and back-end development.
-- User Authentication: Implementing user authentication features enhanced my knowledge of user registration, login, and password security.
-- Database Management: Using Firebase's Firestore database helped me improve my skills in data storage and retrieval. I gained a better understanding of structuring and querying data efficiently to support various social networking features.
-- Problem-Solving: Throughout the project, I encountered and resolved various technical challenges, strengthening my problem-solving and debugging skills.
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-**Features**
+### `npm test`
 
-This website is a social platform designed to connect people. It allows users to create profiles, make posts, and interact with each other. Users can also customize their profiles, comment on, like, and repost other people's posts. Additionally, users can integrate photos and videos within their posts.
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-The following technologies were used to build this app:
+### `npm run build`
 
-**HTML<br>
-CSS<br>
-JavaScript<br>
-React<br>
-Firebase <br>**
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+
+### `npm run eject`
+
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+
+## Learn More
+
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).
+
+### Code Splitting
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+
+### Analyzing the Bundle Size
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+
+### Making a Progressive Web App
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+
+### Advanced Configuration
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+
+### Deployment
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+
+### `npm run build` fails to minify
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
